@@ -83,14 +83,14 @@ export default function Security({ users = [], logs = [] }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Security" />
+            <Head title="Account Management" />
             <div className="max-w-[1100px] mx-auto space-y-6">
 
                 {/* ── Page header ── */}
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none">Security</h1>
-                        <p className="text-gray-500 text-sm mt-1">Manage users and view activity logs.</p>
+                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none">Account Management</h1>
+                        <p className="text-gray-500 text-sm mt-1">Manage user accounts, roles, and view activity logs.</p>
                     </div>
                     {canManageUsers && (
                         <button

@@ -14,7 +14,7 @@ import { useState } from 'react';
  *     Links
  *
  *   LIBRARY
- *     Favorites
+ *     Bookmarks
  *     Archive Bin
  *
  *   SECURITY
@@ -68,8 +68,8 @@ export default function AuthenticatedLayout({ children }) {
                         </div>
                         {isSidebarOpen && (
                             <div className="flex flex-col">
-                                <span className="text-[17px] font-bold text-white leading-tight tracking-wide">CVSU-CELLAR DMS</span>
-                                <span className="text-[11px] font-medium text-emerald-200/70">Research Center</span>
+                                <span className="text-[17px] font-bold text-white leading-tight tracking-wide">CELLAR</span>
+                                <span className="text-[11px] font-medium text-emerald-200/70">IMS</span>
                             </div>
                         )}
                     </Link>
@@ -105,18 +105,27 @@ export default function AuthenticatedLayout({ children }) {
                             </svg>
                             {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Links</span>}
                         </Link>
+
+                        {/* Client Requests */}
+                        <Link href={route('requests.index')} className={navItemClass(route().current('requests.index'))}>
+                            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Client Requests</span>}
+                        </Link>
                     </nav>
 
                     {/* ── LIBRARY group ── */}
                     <SectionLabel label="Library" />
                     <nav className="space-y-1 flex flex-col items-center px-3">
 
-                        {/* Favorites */}
+                        {/* Bookmarks */}
                         <Link href={route('favorites.index')} className={navItemClass(route().current('favorites.index'))}>
                             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-4.5L5 21V5z" />
                             </svg>
-                            {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Favorites</span>}
+                            {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Bookmarks</span>}
                         </Link>
 
                         {/* Bin */}
@@ -128,18 +137,17 @@ export default function AuthenticatedLayout({ children }) {
                         </Link>
                     </nav>
 
-                    {/* ── SECURITY group ── */}
-                    <SectionLabel label="Security" />
+                    {/* ── ACCOUNT MANAGEMENT group ── */}
+                    <SectionLabel label="Management" />
                     <nav className="space-y-1 mb-8 flex flex-col items-center px-3">
 
-                        {/* Security */}
+                        {/* Security / Account Management */}
                         <Link href={route('security')} className={navItemClass(route().current('security'))}>
                             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
-                            {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Security</span>}
+                            {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Account Management</span>}
                         </Link>
-
 
                     </nav>
                 </div>

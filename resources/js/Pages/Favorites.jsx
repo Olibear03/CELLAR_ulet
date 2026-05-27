@@ -142,7 +142,7 @@ export default function Favorites({ documents = [], links = [] }) {
                                 <svg className="w-4 h-4 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                 </svg>
-                                Remove from Favorites
+                                Remove from Bookmarks
                             </button>
                             <button
                                 onClick={() => handleMoveToBin(file.id)}
@@ -162,17 +162,17 @@ export default function Favorites({ documents = [], links = [] }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Favorites" />
+            <Head title="Bookmarks" />
             {/* Close info popover when clicking outside */}
             <div className="max-w-[1100px] mx-auto space-y-6">
                 {/* Page header */}
                 <div className="flex items-center gap-3">
-                    <svg className="w-8 h-8 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    <svg className="w-8 h-8 text-blue-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-4.5L5 21V5z" />
                     </svg>
                     <div>
-                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none">Favorites</h1>
-                        <p className="text-gray-500 text-sm mt-0.5">Quick access to documents and links you've starred.</p>
+                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none">Bookmarks</h1>
+                        <p className="text-gray-500 text-sm mt-0.5">Quick access to documents and links you've bookmarked.</p>
                     </div>
                 </div>
 
@@ -180,10 +180,10 @@ export default function Favorites({ documents = [], links = [] }) {
                     <div className="flex flex-col items-center justify-center py-24 text-center">
                         <svg className="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-4.5L5 21V5z" />
                         </svg>
-                        <p className="text-gray-500 font-medium">No favorites yet.</p>
-                        <p className="text-gray-400 text-sm mt-1">Star a file or link to see it here.</p>
+                        <p className="text-gray-500 font-medium">No bookmarks yet.</p>
+                        <p className="text-gray-400 text-sm mt-1">Bookmark a file or link to see it here.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -195,7 +195,7 @@ export default function Favorites({ documents = [], links = [] }) {
                                 <span className="text-sm font-semibold text-gray-400">{documents.length}</span>
                             </div>
                             {documents.length === 0 ? (
-                                <div className="px-5 py-10 text-center text-gray-400 text-sm">No documents starred yet.</div>
+                                <div className="px-5 py-10 text-center text-gray-400 text-sm">No documents bookmarked yet.</div>
                             ) : (
                                 <ul className="divide-y divide-gray-100">
                                     {documents.map((file) => (
@@ -212,7 +212,7 @@ export default function Favorites({ documents = [], links = [] }) {
                                 <span className="text-sm font-semibold text-gray-400">{links.length}</span>
                             </div>
                             {links.length === 0 ? (
-                                <div className="px-5 py-10 text-center text-gray-400 text-sm">No links starred yet.</div>
+                                <div className="px-5 py-10 text-center text-gray-400 text-sm">No links bookmarked yet.</div>
                             ) : (
                                 <ul className="divide-y divide-gray-100">
                                     {links.map((file) => (
@@ -230,7 +230,7 @@ export default function Favorites({ documents = [], links = [] }) {
             <InfoPanel
                 file={infoFile}
                 onClose={() => setInfoFile(null)}
-                locationLabel="Favorites"
+                locationLabel="Bookmarks"
             />
 
             {/* File preview overlay */}

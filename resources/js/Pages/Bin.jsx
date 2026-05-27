@@ -45,7 +45,7 @@ export default function Bin({ files = [] }) {
                 {/* Page header */}
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none">Archive Bin</h1>
+                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none"> Bin</h1>
                         <p className="text-gray-500 text-sm mt-1">
                             {files.length > 0
                                 ? `${files.length} deleted item${files.length !== 1 ? 's' : ''} — restore or permanently remove them.`

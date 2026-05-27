@@ -8,8 +8,60 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    // Landing page — shows login button + Submit Client Request button
+    return Inertia::render('Welcome');
 });
+
+// ── Public Client Request Form (no login required) ──────────────────────────
+Route::get('/request', function () {
+    return Inertia::render('ClientRequestForm');
+})->name('client-request.form');
+
+Route::post('/request', function (\Illuminate\Http\Request $request) {
+    $validated = $request->validate([
+        'client_name'          => 'required|string|max:150',
+        'address'              => 'required|string|max:300',
+        'occupation'           => 'required|string|max:150',
+        'contact_number'       => 'required|string|max:50',
+        'email'                => 'required|email|max:150',
+        'agency'               => 'nullable|string|max:200',
+        'office_address'       => 'nullable|string|max:300',
+        'services'             => 'required|array|min:1',
+        'language_options'     => 'nullable|array',
+        'translation_document' => 'nullable|string|max:500',
+        'research_title'       => 'nullable|string|max:500',
+        'proficiency_options'  => 'nullable|array',
+        'client_signature'     => 'nullable|string',
+        'printed_name'         => 'nullable|string|max:150',
+    ]);
+
+    $ref = \App\Models\ClientRequest::generateReferenceNumber();
+
+    $clientRequest = \App\Models\ClientRequest::create([
+        ...$validated,
+        'reference_number' => $ref,
+        'request_date'     => now()->toDateString(),
+        'status'           => 'pending',
+    ]);
+
+    // Send confirmation email to client
+    \Illuminate\Support\Facades\Mail::send(
+        'emails.client-request-confirmation',
+        ['request' => $clientRequest],
+        function ($m) use ($clientRequest) {
+            $m->to($clientRequest->email, $clientRequest->client_name)
+              ->subject("CELLAR Request Received — {$clientRequest->reference_number}");
+        }
+    );
+
+    return redirect()->route('client-request.success', ['ref' => $ref]);
+})->name('client-request.submit');
+
+Route::get('/request/success', function (\Illuminate\Http\Request $request) {
+    return Inertia::render('ClientRequestSuccess', [
+        'reference' => $request->query('ref'),
+    ]);
+})->name('client-request.success');
 
 Route::get('/dashboard', function () {
     $userId = auth()->id();
@@ -24,10 +76,18 @@ Route::get('/dashboard', function () {
         $q->where('name', 'Links');
     })->count();
 
-    // Uploaded this month
-    $uploadedThisMonth = \App\Models\ArchiveFile::whereMonth('created_at', now()->month)
+    // Client requests submitted this month
+    $requestsThisMonth = \App\Models\ClientRequest::whereMonth('created_at', now()->month)
         ->whereYear('created_at', now()->year)
         ->count();
+
+    // Monthly upload counts for the current year (all file types)
+    $monthlyUploads = \App\Models\ArchiveFile::whereYear('created_at', now()->year)
+        ->selectRaw("strftime('%m', created_at) as month, count(*) as total")
+        ->groupByRaw("strftime('%m', created_at)")
+        ->orderByRaw("strftime('%m', created_at)")
+        ->pluck('total', 'month')
+        ->toArray();
 
     // Recent uploads (last 5, any type)
     $recentUploads = \App\Models\ArchiveFile::with(['category', 'user'])
@@ -47,11 +107,12 @@ Route::get('/dashboard', function () {
         ->get();
 
     return Inertia::render('Dashboard', [
-        'totalFiles'        => $totalFiles,
-        'totalLinks'        => $totalLinks,
-        'uploadedThisMonth' => $uploadedThisMonth,
-        'recentUploads'     => $recentUploads,
-        'favorites'         => $favorites,
+        'totalFiles'         => $totalFiles,
+        'totalLinks'         => $totalLinks,
+        'requestsThisMonth'  => $requestsThisMonth,
+        'monthlyUploads'     => $monthlyUploads,
+        'recentUploads'      => $recentUploads,
+        'favorites'          => $favorites,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -299,7 +360,7 @@ Route::delete('/favorites/{id}', function ($id) {
 Route::get('/security', function () {
     return Inertia::render('Security', [
         'users' => \App\Models\User::all(),
-        'logs' => \App\Models\ActivityLog::with('user')->latest()->take(20)->get()
+        'logs' => \App\Models\ActivityLog::with('user')->latest()->take(20)->get(),
     ]);
 })->middleware(['auth', 'verified'])->name('security');
 
@@ -395,6 +456,84 @@ Route::delete('/security/users/{id}', function ($id) {
 Route::get('/activity-diagram', function () {
     return Inertia::render('ActivityDiagram');
 })->middleware(['auth', 'verified'])->name('activity-diagram');
+
+// ── Client Request Management (admin) ───────────────────────────────────────
+Route::get('/requests', function () {
+    $requests = \App\Models\ClientRequest::with('reviewer')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return Inertia::render('RequestManagement', [
+        'requests' => $requests,
+    ]);
+})->middleware(['auth', 'verified'])->name('requests.index');
+
+// Approve or reject a request (Director only)
+Route::patch('/requests/{id}/review', function (\Illuminate\Http\Request $request, $id) {
+    $request->validate([
+        'status'             => 'required|in:approved,rejected',
+        'admin_signature'    => 'nullable|string',
+        'admin_printed_name' => 'nullable|string|max:150',
+    ]);
+
+    $cr = \App\Models\ClientRequest::findOrFail($id);
+    $cr->update([
+        'status'             => $request->status,
+        'reviewed_by'        => auth()->id(),
+        'reviewed_at'        => now(),
+        'admin_signature'    => $request->admin_signature,
+        'admin_printed_name' => $request->admin_printed_name ?? auth()->user()->name,
+    ]);
+
+    return redirect()->back()->with('success', "Request {$cr->reference_number} {$request->status}.");
+})->middleware(['auth', 'verified'])->name('requests.review');
+
+// Analytics dashboard data
+Route::get('/requests/analytics', function () {
+    $year  = request()->query('year', now()->year);
+    $month = request()->query('month');
+
+    $query = \App\Models\ClientRequest::whereYear('created_at', $year);
+    if ($month) $query->whereMonth('created_at', $month);
+
+    $all = $query->get();
+
+    // Monthly totals for the selected year
+    $monthly = \App\Models\ClientRequest::whereYear('created_at', $year)
+        ->selectRaw("strftime('%m', created_at) as month, count(*) as total")
+        ->groupByRaw("strftime('%m', created_at)")
+        ->orderByRaw("strftime('%m', created_at)")
+        ->pluck('total', 'month');
+
+    // Service distribution — flatten all services arrays
+    $serviceCounts = [];
+    foreach ($all as $r) {
+        foreach ($r->services ?? [] as $svc) {
+            $serviceCounts[$svc] = ($serviceCounts[$svc] ?? 0) + 1;
+        }
+    }
+
+    // Language demand
+    $languageCounts = [];
+    foreach ($all as $r) {
+        foreach ($r->language_options ?? [] as $lang) {
+            $languageCounts[$lang] = ($languageCounts[$lang] ?? 0) + 1;
+        }
+    }
+
+    return response()->json([
+        'total'          => $all->count(),
+        'pending'        => $all->where('status', 'pending')->count(),
+        'approved'       => $all->where('status', 'approved')->count(),
+        'rejected'       => $all->where('status', 'rejected')->count(),
+        'monthly'        => $monthly,
+        'services'       => $serviceCounts,
+        'languages'      => $languageCounts,
+        'available_years'=> \App\Models\ClientRequest::selectRaw("strftime('%Y', created_at) as y")
+                                ->groupByRaw("strftime('%Y', created_at)")
+                                ->pluck('y'),
+    ]);
+})->middleware(['auth', 'verified'])->name('requests.analytics');
 
 Route::post('/categories', [CategoryController::class, 'store'])->middleware(['auth', 'verified'])->name('categories.store');
 
