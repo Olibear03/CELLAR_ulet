@@ -12,7 +12,7 @@ import Breadcrumbs from '@/Components/Breadcrumbs';
 import Dropdown from '@/Components/Dropdown';
 
 export default function Documents({ files = [], categories = [], currentFolder = null, breadcrumbs = [], currentPath = '' }) {
-    /* ── Modal state ── */
+    /* -- Modal state -- */
     const [uploadMode, setUploadMode] = useState(null);
     const [isNewFolderOpen, setIsNewFolderOpen] = useState(false);
     const [isNewDropdownOpen, setIsNewDropdownOpen] = useState(false);
@@ -21,14 +21,14 @@ export default function Documents({ files = [], categories = [], currentFolder =
     const [renameTarget, setRenameTarget] = useState(null); // file being renamed
     const [shareTarget, setShareTarget]   = useState(null); // file being shared
 
-    /* ── Multi-select state ── */
+    /* -- Multi-select state -- */
     const [selectedIds, setSelectedIds] = useState(new Set()); // Set of selected file ids
 
-    /* ── Single-click highlight & double-click preview ── */
+    /* -- Single-click highlight & double-click preview -- */
     const [previewFile, setPreviewFile] = useState(null);
     const clickTimer = useRef(null);
 
-    /* ── View & search state ── */
+    /* -- View & search state -- */
     const [viewMode, setViewMode] = useState('list');   // 'list' | 'grid'
     const [searchQuery, setSearchQuery] = useState('');
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -37,7 +37,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
     const dropdownRef = useRef(null);
     const defaultCategory = categories.find(c => c.name === 'general_doc')?.id || '';
 
-    /* ── Close dropdown on outside click ── */
+    /* -- Close dropdown on outside click -- */
     useEffect(() => {
         const handler = (e) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -48,7 +48,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    /* ── Client-side filtering ── */
+    /* -- Client-side filtering -- */
     const filteredFiles = files.filter((file) => {
         const q = searchQuery.toLowerCase();
         const matchesSearch =
@@ -66,7 +66,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
 
     const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
 
-    /* ── Create folder handler ── */
+    /* -- Create folder handler -- */
     const handleCreateFolder = (name) => {
         router.post(route('folders.store'), {
             name,
@@ -78,10 +78,10 @@ export default function Documents({ files = [], categories = [], currentFolder =
         });
     };
 
-    /* ── Row click handler ──
-       Single click  → toggle selection (multi-select)
-       Double click  → open folder or preview file
-    ── */
+    /* -- Row click handler --
+       Single click  ? toggle selection (multi-select)
+       Double click  ? open folder or preview file
+    -- */
     const handleRowClick = (file, e) => {
         // If Ctrl/Cmd or Shift held, always toggle selection
         if (e.ctrlKey || e.metaKey || e.shiftKey) {
@@ -112,7 +112,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
         }
     };
 
-    /* ── Toggle a single item in the selection set ── */
+    /* -- Toggle a single item in the selection set -- */
     const toggleSelect = (id) => {
         setSelectedIds(prev => {
             const next = new Set(prev);
@@ -121,7 +121,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
         });
     };
 
-    /* ── Bulk actions ── */
+    /* -- Bulk actions -- */
     const handleBulkDelete = () => {
         if (!confirm(`Move ${selectedIds.size} item(s) to bin?`)) return;
         router.post(route('documents.bulk-delete'), {
@@ -157,7 +157,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
         });
     };
 
-    /* ── Cleanup double-click timer on unmount ── */
+    /* -- Cleanup double-click timer on unmount -- */
     useEffect(() => {
         return () => { if (clickTimer.current) clearTimeout(clickTimer.current); };
     }, []);
@@ -166,7 +166,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
         router.post(route('favorites.store', id));
     };
 
-    /* ── Move handler — supports single and bulk ── */
+    /* -- Move handler — supports single and bulk -- */
     const handleMove = (destinationFolderId) => {
         if (moveTarget?._bulkIds) {
             // Bulk move — patch each item
@@ -223,7 +223,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                     onClick={() => { setIsNewDropdownOpen(false); setIsNewFolderOpen(true); }}
                                 >
                                     {/* Folder-plus icon */}
-                                    <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                             d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                     </svg>
@@ -235,7 +235,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                                     onClick={() => { setIsNewDropdownOpen(false); setUploadMode('folder'); }}
                                 >
-                                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11v6m-3-3h6" />
                                     </svg>
@@ -402,7 +402,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                         <div className="h-4 w-px bg-gray-200 mx-1" />
 
                         {/* Add to Bookmarks */}
-                        <button onClick={handleBulkFavorite} className="p-1.5 rounded-lg text-gray-500 hover:text-amber-500 hover:bg-amber-50 transition-colors" title="Add to Bookmarks">
+                        <button onClick={handleBulkFavorite} className="p-1.5 rounded-lg text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition-colors" title="Add to Bookmarks">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                             </svg>
@@ -454,7 +454,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                 <div className="flex items-center gap-3">
                                                     {/* File or Folder icon */}
                                                     {file.metadata?.type === 'folder' ? (
-                                                        <div className="bg-amber-100 text-amber-500 p-2 rounded-lg shrink-0">
+                                                        <div className="bg-blue-100 text-blue-500 p-2 rounded-lg shrink-0">
                                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                                             </svg>
@@ -518,7 +518,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                     {/* Share Link */}
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); setShareTarget(file); }}
-                                                        className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                                                         title="Share Link"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -546,7 +546,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                                 </button>
                                                                 {/* Add to Bookmarks */}
                                                                 <button onClick={() => handleFavorite(file.id)} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                                                    <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                                                                    <svg className="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
                                                                     Add to Bookmarks
                                                                 </button>
                                                                 {/* Move to */}
@@ -556,7 +556,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                                 </button>
                                                                 {/* Share Link */}
                                                                 <button onClick={() => setShareTarget(file)} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                                                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                                                    <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                                                                     Share Link
                                                                 </button>
                                                                 {/* Info — opens the slide-over details panel */}
@@ -593,7 +593,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                         </table>
                     </div>
                 ) : (
-                    /* ── Grid view — matches reference design ── */
+                    /* -- Grid view — matches reference design -- */
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {filteredFiles.length > 0 ? (
                             filteredFiles.map((file) => {
@@ -610,12 +610,12 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                 : 'bg-white border-gray-200 hover:shadow-md hover:border-gray-300'
                                         }`}
                                     >
-                                        {/* ── Top area: icon + ⋮ menu (files only) ── */}
+                                        {/* -- Top area: icon + ? menu (files only) -- */}
                                         <div className="relative flex items-start justify-between p-4 pb-2">
                                             {/* Icon */}
-                                            <div className={`p-3 rounded-xl ${isFolder ? 'bg-amber-100' : 'bg-[#eef0fc]'}`}>
+                                            <div className={`p-3 rounded-xl ${isFolder ? 'bg-blue-100' : 'bg-[#eef0fc]'}`}>
                                                 {isFolder ? (
-                                                    <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                                     </svg>
                                                 ) : (
@@ -625,7 +625,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                 )}
                                             </div>
 
-                                            {/* ⋮ context menu — shown on hover for both files and folders */}
+                                            {/* ? context menu — shown on hover for both files and folders */}
                                             <div
                                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
                                                 onClick={(e) => e.stopPropagation()}
@@ -644,7 +644,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                             Rename
                                                         </button>
                                                         <button onClick={() => handleFavorite(file.id)} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                                            <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                                                            <svg className="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
                                                             Add to Bookmarks
                                                         </button>
                                                         <button onClick={() => setMoveTarget(file)} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -652,7 +652,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                             Move to
                                                         </button>
                                                         <button onClick={() => setShareTarget(file)} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                                            <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                                            <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                                                             Share Link
                                                         </button>
                                                         {/* Info — opens the slide-over details panel */}
@@ -670,7 +670,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                             </div>
                                         </div>
 
-                                        {/* ── Middle: name + subtitle ── */}
+                                        {/* -- Middle: name + subtitle -- */}
                                         <div className="px-4 pb-3 flex-1">
                                             <p className="text-sm font-semibold text-gray-900 truncate">{file.title}</p>
                                             {isFolder ? (
@@ -686,7 +686,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                             )}
                                         </div>
 
-                                        {/* ── Bottom action bar — files only ── */}
+                                        {/* -- Bottom action bar — files only -- */}
                                         {!isFolder && (
                                             <div
                                                 className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100"
@@ -706,7 +706,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                                 {/* Share Link button */}
                                                 <button
                                                     onClick={() => setShareTarget(file)}
-                                                    className="p-1 rounded-full text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                                    className="p-1 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                                                     title="Share Link"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

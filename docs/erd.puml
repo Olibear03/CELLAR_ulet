@@ -1,0 +1,204 @@
+@startuml CELLAR_ERD
+!define TABLE(name) class name << (T,#FFAAAA) >>
+!define VIEW(name) class name << (V,#AAAAFF) >>
+!define PRIMARY_KEY(x) <b>PK: x</b>
+!define FOREIGN_KEY(x) <b>FK: x</b>
+
+skinparam backgroundColor #FEFEFE
+skinparam classBackgroundColor #F8F8F8
+skinparam classBorderColor #333333
+skinparam arrowColor #333333
+
+' ========== USERS ==========
+TABLE(users) {
+  <b>PK: id</b> (UUID/INT)
+  --
+  name: varchar(255)
+  email: varchar(255) [UNIQUE]
+  password: varchar(255)
+  role: enum(admin, director, evaluator) [DEFAULT: evaluator]
+  college: varchar(255) [English Critic's college: CAS]
+  is_staff: boolean [DEFAULT: false]
+  created_at: timestamp
+  updated_at: timestamp
+  deleted_at: timestamp (soft delete)
+  --
+  <b>SAMPLE:</b>
+  1 | Critic Dummy 1 | critic1@csu.edu.ph | hash | evaluator | CAS | false
+  2 | Director Admin | director@csu.edu.ph | hash | director | CSU | true
+  3 | Critic Dummy 2 | critic2@csu.edu.ph | hash | evaluator | CEIT | false
+}
+
+' ========== CRITIC SUMMARY REPORTS ==========
+TABLE(critic_summary_reports) {
+  <b>PK: id</b> (UUID/INT)
+  <b>FK: user_id</b> -> users.id
+  --
+  student_name: varchar(255)
+  course_degree: varchar(255)
+  manuscript_title: text
+  document_type: enum(thesis, dissertation, capstone, ...)
+  times_read: integer
+  page_count: integer
+  total_amount: decimal(10,2)
+  or_number: varchar(50) [OR-2026-0001]
+  status: enum(draft, submitted, approved) [DEFAULT: submitted]
+  created_at: timestamp
+  updated_at: timestamp
+  --
+  <b>SAMPLE:</b>
+  1 | 1 | Juan dela Cruz | AB Journalism | An Analysis of Modern Digital Journalism... | thesis | 2 | 110 | 2200.00 | OR-2026-0001 | submitted | 2026-06-01
+  2 | 1 | Maria Clara | AB English | Syntactic Structures and Stylistics... | thesis | 3 | 145 | 4350.00 | OR-2026-0002 | submitted | 2026-06-02
+  3 | 1 | Crisostomo Ibarra | MA English | Socio-Political Discourse in Post-Colonial... | dissertation | 2 | 210 | 8400.00 | OR-2026-0003 | submitted | 2026-06-03
+}
+
+' ========== CATEGORIES ==========
+TABLE(categories) {
+  <b>PK: id</b> (UUID/INT)
+  --
+  name: varchar(255)
+  slug: varchar(255) [UNIQUE]
+  description: text
+  created_at: timestamp
+  updated_at: timestamp
+  --
+  <b>SAMPLE:</b>
+  1 | Linguistics | linguistics | Study of language structure and meaning
+  2 | Literature | literature | Literary works and criticism
+}
+
+' ========== ARCHIVE FILES ==========
+TABLE(archive_files) {
+  <b>PK: id</b> (UUID/INT)
+  <b>FK: category_id</b> -> categories.id
+  <b>FK: folder_id</b> -> archive_files.id [nullable, for nested folders]
+  <b>FK: user_id</b> -> users.id [uploader/owner]
+  --
+  filename: varchar(255)
+  filepath: text
+  file_size: bigint [in bytes]
+  mime_type: varchar(100)
+  is_public: boolean [DEFAULT: false]
+  deleted_at: timestamp [soft delete]
+  created_at: timestamp
+  updated_at: timestamp
+  --
+  <b>SAMPLE:</b>
+  1 | 1 | NULL | 2 | thesis_juan_dela_cruz.pdf | storage/archive/file_001.pdf | 2048576 | application/pdf | false | NULL | 2026-06-01
+  2 | 2 | 1 | 2 | literary_studies_folder/ | storage/archive/folder_002/ | 0 | directory | false | NULL | 2026-06-01
+  3 | 2 | 2 | 2 | semiotics_in_literature.docx | storage/archive/file_003.docx | 512000 | application/vnd.openxml | true | NULL | 2026-06-02
+}
+
+' ========== FILE SHARES ==========
+TABLE(file_shares) {
+  <b>PK: id</b> (UUID/INT)
+  <b>FK: file_id</b> -> archive_files.id
+  <b>FK: shared_with_user_id</b> -> users.id
+  <b>FK: shared_by_user_id</b> -> users.id
+  --
+  permission: enum(view, download, comment, edit) [DEFAULT: view]
+  created_at: timestamp
+  expires_at: timestamp [nullable, for time-limited shares]
+  --
+  <b>SAMPLE:</b>
+  1 | 1 | 3 | 2 | view | 2026-06-01 | 2026-12-31
+  2 | 3 | 1 | 2 | download | 2026-06-02 | NULL
+}
+
+' ========== FAVORITES ==========
+TABLE(favorites) {
+  <b>PK: id</b> (UUID/INT)
+  <b>FK: user_id</b> -> users.id
+  <b>FK: file_id</b> -> archive_files.id [nullable]
+  --
+  favoritable_type: varchar(255) [polymorphic: ArchiveFile, CriticSummaryReport, etc.]
+  favoritable_id: uuid/int [polymorphic ID]
+  created_at: timestamp
+  --
+  <b>SAMPLE:</b>
+  1 | 1 | 1 | NULL | ArchiveFile | 1 | 2026-06-01
+  2 | 1 | NULL | 1 | CriticSummaryReport | 1 | 2026-06-01
+}
+
+' ========== ACTIVITY LOGS ==========
+TABLE(activity_logs) {
+  <b>PK: id</b> (UUID/INT)
+  <b>FK: user_id</b> -> users.id [who performed the action]
+  --
+  action: varchar(255) [e.g., created, updated, deleted, viewed]
+  subject_type: varchar(255) [e.g., CriticSummaryReport, ArchiveFile]
+  subject_id: uuid/int
+  description: text
+  ip_address: varchar(45)
+  user_agent: text
+  created_at: timestamp
+  --
+  <b>SAMPLE:</b>
+  1 | 1 | created | CriticSummaryReport | 1 | Created certification for Juan dela Cruz thesis | 192.168.1.10 | Mozilla/5.0... | 2026-06-01
+  2 | 2 | submitted | CriticSummaryReport | 1 | Director approved submission OR-2026-0001 | 192.168.1.20 | Mozilla/5.0... | 2026-06-01
+  3 | 1 | downloaded | ArchiveFile | 3 | Downloaded semiotics_in_literature.docx | 192.168.1.10 | Mozilla/5.0... | 2026-06-02
+}
+
+' ========== RELATIONSHIPS ==========
+
+users "1" -- "*" critic_summary_reports : "encodes/submits"
+users "1" -- "*" archive_files : "owns/uploads"
+users "1" -- "*" file_shares : "shares from"
+users "1" -- "*" file_shares : "shares to"
+users "1" -- "*" favorites : "bookmarks"
+users "1" -- "*" activity_logs : "performs"
+
+critic_summary_reports "*" -- "1" users : "reviewed by"
+
+archive_files "1" -- "*" archive_files : "contains (folder nesting)"
+archive_files "*" -- "1" categories : "categorized as"
+archive_files "*" -- "1" users : "uploaded by"
+
+archive_files "1" -- "*" file_shares : "is shared"
+file_shares "*" -- "1" users : "shared with"
+
+favorites "*" -- "1" users : "marked by"
+favorites "*" -- "1" archive_files : "marks (polymorphic)"
+
+activity_logs "*" -- "1" users : "logs"
+
+note right of users
+  <b>ROLES:</b>
+  - admin: Full system access
+  - director: Manages submissions, generates receipts
+  - evaluator: English Critic role (reads/edits manuscripts)
+end note
+
+note right of critic_summary_reports
+  <b>DOCUMENT TYPES:</b>
+  - thesis
+  - dissertation
+  - capstone
+  - edp_manuscript
+  - design_project
+  - student_teaching_portfolio
+  - narrative_report
+  - other
+  
+  <b>OR GENERATION:</b>
+  Format: OR-YYYY-XXXX
+  (Generated by director after submission)
+end note
+
+note right of archive_files
+  <b>SUPPORTS:</b>
+  - PDF, DOCX, PPT, XLS
+  - Image files (JPG, PNG)
+  - Directory nesting (folders)
+  - Soft deletes (deleted_at)
+end note
+
+note left of activity_logs
+  <b>AUDIT TRAIL:</b>
+  - Track all CRUD operations
+  - Log downloads & views
+  - Maintain IP & user agent
+  - Support compliance reporting
+end note
+
+@enduml

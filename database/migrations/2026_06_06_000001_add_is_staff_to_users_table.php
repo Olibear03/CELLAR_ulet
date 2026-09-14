@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('client_requests', function (Blueprint $table) {
-            //
+        Schema::table('users', function (Blueprint $table) {
+            $table->boolean('is_staff')->default(false)->after('is_assistant');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('client_requests', function (Blueprint $table) {
-            //
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('is_staff');
         });
     }
 };

@@ -58,7 +58,7 @@ export default function Favorites({ documents = [], links = [] }) {
 
                 {/* Icon — folder / file / link */}
                 {isFolder ? (
-                    <div className="bg-amber-100 text-amber-500 p-2 rounded-lg shrink-0">
+                    <div className="bg-blue-100 text-blue-500 p-2 rounded-lg shrink-0">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -139,7 +139,7 @@ export default function Favorites({ documents = [], links = [] }) {
                                 onClick={() => handleUnfavorite(file.id)}
                                 className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                             >
-                                <svg className="w-4 h-4 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                 </svg>
                                 Remove from Bookmarks

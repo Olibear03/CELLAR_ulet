@@ -1,4 +1,4 @@
-﻿import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AddLinkModal from '@/Components/AddLinkModal';
@@ -7,8 +7,8 @@ import Dropdown from '@/Components/Dropdown';
 import InfoPanel from '@/Components/InfoPanel';
 
 /**
- * Links page â€” external resources and shortcuts.
- * Each row has a working â“˜ info popover and â‹® context menu
+ * Links page — external resources and shortcuts.
+ * Each row has a working ⓘ info popover and ⋮ context menu
  * with Add to Bookmarks and Move to Bin actions.
  */
 export default function Links({ files = [], categories = [] }) {
@@ -22,9 +22,9 @@ export default function Links({ files = [], categories = [] }) {
 
     const defaultCategory = categories.find(c => c.name === 'Links')?.id || '';
 
-    /* â”€â”€ Actions â”€â”€ */
+    /* ── Actions ── */
     const handleFavorite = (id) => {
-        // No preserveScroll â€” Inertia must reload so Bookmarks page gets fresh data
+        // No preserveScroll — Inertia must reload so Bookmarks page gets fresh data
         router.post(route('favorites.store', id));
     };
 
@@ -36,7 +36,7 @@ export default function Links({ files = [], categories = [] }) {
         }
     };
 
-    /* â”€â”€ Filtering â”€â”€ */
+    /* ── Filtering ── */
     const filteredFiles = files.filter((file) => {
         const q = searchQuery.toLowerCase();
         const matchesSearch =
@@ -59,14 +59,14 @@ export default function Links({ files = [], categories = [] }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Links" />
+            <Head title="External Links" />
             {/* Clicking outside closes any open info popover */}
             <div className="max-w-[1100px] mx-auto space-y-4">
 
                 {/* Page header */}
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none">Links</h1>
+                        <h1 className="text-[2rem] font-extrabold text-gray-900 tracking-tight leading-none">External Links</h1>
                         <p className="text-gray-500 text-sm mt-1">External resources, journals, and partner portals.</p>
                     </div>
                     <button
@@ -189,7 +189,7 @@ export default function Links({ files = [], categories = [] }) {
                                         <p className="text-xs text-gray-400 truncate mt-0.5">{file.file_path}</p>
                                     </div>
 
-                                    {/* â“˜ info button â€” opens slide-over panel */}
+                                    {/* ⓘ info button — opens slide-over panel */}
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setInfoFile(file); }}
                                         className="p-1.5 rounded-lg text-gray-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"
@@ -200,7 +200,7 @@ export default function Links({ files = [], categories = [] }) {
                                         </svg>
                                     </button>
 
-                                    {/* â‹® context menu */}
+                                    {/* ⋮ context menu */}
                                     <div onClick={(e) => e.stopPropagation()}>
                                         <Dropdown>
                                             <Dropdown.Trigger>
@@ -216,7 +216,7 @@ export default function Links({ files = [], categories = [] }) {
                                                     Edit
                                                 </button>
                                                 <button onClick={() => handleFavorite(file.id)} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                                    <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                                                    <svg className="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
                                                     Add to Bookmarks
                                                 </button>
                                                 <div className="h-px bg-gray-100 my-1" />
@@ -243,7 +243,7 @@ export default function Links({ files = [], categories = [] }) {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {filteredFiles.length > 0 ? filteredFiles.map((file) => (
                             <div key={file.id} className="relative bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-md transition-shadow group flex flex-col">
-                                {/* â‹® menu top-right */}
+                                {/* ⋮ menu top-right */}
                                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                     <Dropdown>
                                         <Dropdown.Trigger>
@@ -259,7 +259,7 @@ export default function Links({ files = [], categories = [] }) {
                                                 Edit
                                             </button>
                                             <button onClick={() => handleFavorite(file.id)} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                                <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                                                <svg className="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
                                                 Add to Bookmarks
                                             </button>
                                             <div className="h-px bg-gray-100 my-1" />
@@ -318,7 +318,7 @@ export default function Links({ files = [], categories = [] }) {
                 link={editTarget}
             />
 
-            {/* Slide-over info panel â€” same as Documents */}
+            {/* Slide-over info panel — same as Documents */}
             <InfoPanel
                 file={infoFile}
                 onClose={() => setInfoFile(null)}

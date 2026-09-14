@@ -76,7 +76,7 @@ export default function Edit({ mustVerifyEmail, status }) {
         <button
             type="submit"
             disabled={processing}
-            className="bg-amber-400 hover:bg-amber-500 disabled:opacity-60 text-emerald-900 font-bold text-sm px-6 py-2 rounded-lg transition-colors"
+            className="bg-blue-400 hover:bg-blue-500 disabled:opacity-60 text-blue-900 font-bold text-sm px-6 py-2 rounded-lg transition-colors"
         >
             {processing ? 'Saving…' : label}
         </button>
@@ -101,7 +101,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     <div className="flex items-center gap-5 mb-7">
                         {/* Avatar with hover edit overlay */}
                         <div className="relative group w-20 h-20 shrink-0">
-                            <div className="w-20 h-20 rounded-full bg-emerald-800 flex items-center justify-center text-white text-2xl font-bold select-none">
+                            <div className="w-20 h-20 rounded-full bg-blue-800 flex items-center justify-center text-white text-2xl font-bold select-none">
                                 {user.name?.charAt(0).toUpperCase()}
                             </div>
                             {/* Edit overlay — appears on hover */}
@@ -164,18 +164,18 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                         {/* Email verification notice */}
                         {mustVerifyEmail && user.email_verified_at === null && (
-                            <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                            <p className="text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                                 Your email is unverified.
                             </p>
                         )}
                         {status === 'verification-link-sent' && (
-                            <p className="text-sm text-green-600">Verification link sent.</p>
+                            <p className="text-sm text-blue-600">Verification link sent.</p>
                         )}
 
                         <div className="flex items-center gap-4">
                             <SaveBtn processing={profileProcessing} />
                             <Transition show={profileSaved} enter="transition ease-in-out" enterFrom="opacity-0" leave="transition ease-in-out" leaveTo="opacity-0">
-                                <p className="text-sm text-green-600 font-medium">Saved.</p>
+                                <p className="text-sm text-blue-600 font-medium">Saved.</p>
                             </Transition>
                         </div>
                     </form>
@@ -236,7 +236,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                         <div className="flex items-center gap-4">
                             <SaveBtn processing={pwProcessing} />
                             <Transition show={pwSaved} enter="transition ease-in-out" enterFrom="opacity-0" leave="transition ease-in-out" leaveTo="opacity-0">
-                                <p className="text-sm text-green-600 font-medium">Password updated.</p>
+                                <p className="text-sm text-blue-600 font-medium">Password updated.</p>
                             </Transition>
                         </div>
                     </form>

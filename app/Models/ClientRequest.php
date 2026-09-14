@@ -2,54 +2,36 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class ClientRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'reference_number',
-        'request_date',
-        'client_name',
-        'address',
-        'occupation',
-        'contact_number',
-        'email',
-        'agency',
-        'office_address',
-        'services',
-        'language_options',
-        'proficiency_options',
-        'translation_document',
-        'research_title',
-        'client_signature',
-        'director_name',
-        'printed_name',
-        'admin_signature',
-        'admin_printed_name',
-        'status',
-        'reviewed_by',
-        'reviewed_at',
-    ];
+    protected $table = 'client_requests';
+
+    protected $guarded = [];
 
     protected $casts = [
-        'services'            => 'array',
-        'language_options'    => 'array',
-        'proficiency_options' => 'array',
-        'request_date'        => 'date',
-        'reviewed_at'         => 'datetime',
+        'services' => 'array',
+        'language_options' => 'array',
+        'request_date' => 'date',
+        'reviewed_at' => 'datetime',
     ];
 
     public static function generateReferenceNumber(): string
     {
-        $year  = now()->year;
-        $count = static::whereYear('created_at', $year)->count() + 1;
-        return 'CLLR-' . $year . '-' . str_pad($count, 5, '0', STR_PAD_LEFT);
+        do {
+            $reference = 'CR-' . now()->format('Ymd') . '-' . strtoupper(Str::random(8));
+        } while (self::where('reference_number', $reference)->exists());
+
+        return $reference;
     }
 
-    public function reviewer()
+    public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }

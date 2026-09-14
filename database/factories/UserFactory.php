@@ -12,34 +12,46 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'name'              => fake()->name(),
+            'email'             => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'password'          => static::$password ??= Hash::make('password'),
+            'remember_token'    => Str::random(10),
+            'is_director'       => false,
+            'is_assistant'      => false,
+            'is_staff'          => false,
+            'is_critic'         => false,
+            'status'            => 'active',
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
+    public function director(): static
+    {
+        return $this->state(['is_director' => true, 'status' => 'active']);
+    }
+
+    public function assistant(): static
+    {
+        return $this->state(['is_assistant' => true, 'status' => 'active']);
+    }
+
+    public function staff(): static
+    {
+        return $this->state(['is_staff' => true, 'status' => 'active']);
+    }
+
+    public function critic(): static
+    {
+        return $this->state(['is_critic' => true, 'status' => 'pending']);
+    }
+
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->state(['email_verified_at' => null]);
     }
 }

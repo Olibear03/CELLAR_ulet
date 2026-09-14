@@ -1,0 +1,91 @@
+// CELLAR - Center for Language Learning and Research
+// Database Diagram by Role (dbdiagram.io format)
+// Organized by user roles: Admin, Director, Evaluator (English Critics)
+
+// ========== CORE USERS TABLE (All Roles) ==========
+Table users {
+  id int [primary key]
+  name varchar(255)
+  email varchar(255) [unique]
+  password varchar(255)
+  role enum('admin', 'director', 'evaluator') [default: 'evaluator']
+  college varchar(255)
+  is_staff boolean [default: false]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+// ========== DIRECTOR ROLE: Submission Management ==========
+Table critic_summary_reports {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  student_name varchar(255)
+  course_degree varchar(255)
+  manuscript_title text
+  document_type enum('thesis', 'dissertation', 'capstone', 'edp_manuscript', 'design_project', 'student_teaching_portfolio', 'narrative_report', 'other')
+  times_read int
+  page_count int
+  total_amount decimal(10,2)
+  or_number varchar(50)
+  status enum('draft', 'submitted', 'approved') [default: 'submitted']
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ========== EVALUATOR ROLE: Archive & File Management ==========
+Table categories {
+  id int [primary key]
+  name varchar(255)
+  slug varchar(255) [unique]
+  description text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table archive_files {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  category_id int [ref: > categories.id]
+  folder_id int [ref: > archive_files.id]
+  filename varchar(255)
+  filepath text
+  file_size bigint
+  mime_type varchar(100)
+  is_public boolean [default: false]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table file_shares {
+  id int [primary key]
+  file_id int [ref: > archive_files.id]
+  shared_with_user_id int [ref: > users.id]
+  shared_by_user_id int [ref: > users.id]
+  permission enum('view', 'download', 'comment', 'edit') [default: 'view']
+  created_at timestamp
+  expires_at timestamp
+}
+
+Table favorites {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  favoritable_type varchar(255)
+  favoritable_id int
+  created_at timestamp
+}
+
+// ========== SHARED: Audit Trail (All Roles) ==========
+Table activity_logs {
+  id int [primary key]
+  user_id int [ref: > users.id]
+  action varchar(255)
+  subject_type varchar(255)
+  subject_id int
+  description text
+  ip_address varchar(45)
+  user_agent text
+  created_at timestamp
+}
+

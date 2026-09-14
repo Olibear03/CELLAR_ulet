@@ -75,7 +75,7 @@ export default function InfoPanel({ file, onClose, locationLabel = 'Root' }) {
                             <div className="flex items-center gap-2 min-w-0">
                                 {/* Icon — changes based on file type */}
                                 {isFolder ? (
-                                    <div className="bg-amber-100 text-amber-500 p-1.5 rounded-md shrink-0">
+                                    <div className="bg-blue-100 text-blue-500 p-1.5 rounded-md shrink-0">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                                 d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />

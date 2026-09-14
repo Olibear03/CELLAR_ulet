@@ -31,14 +31,44 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $user = Auth::user();
+
+        // Block non-director users who aren't active yet
+        if (! $user->is_director) {
+            if ($user->status === 'pending') {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => 'Your account is pending approval. Please wait for an administrator to activate your account.',
+                ]);
+            }
+
+            if ($user->status === 'deactivated') {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => 'Your account has been deactivated. Please contact the administrator.',
+                ]);
+            }
+        }
+
         $request->session()->regenerate();
 
         \App\Models\ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'sign_in',
-            'type' => 'auth',
-            'location' => 'System'
+            'user_id'  => Auth::id(),
+            'action'   => 'sign_in',
+            'type'     => 'auth',
+            'location' => 'System',
         ]);
+
+        // Critics land on their summary report page; everyone else → dashboard
+        if ($user->is_critic && ! $user->is_director && ! $user->is_assistant && ! $user->is_staff) {
+            return redirect()->route('critic.report.create');
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

@@ -1,19 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Modal from '@/Components/Modal';
 import axios from 'axios';
 
 /**
- * ShareLinkModal — generates a temporary guest-access link for a file.
- *
- * The user picks an expiry amount + unit (Hours / Days) using a custom
- * styled dropdown (not a native <select>) so the options list can have
- * rounded corners matching the rest of the UI.
+ * ShareLinkModal — generates a permanent share link for a file.
  *
  * Flow:
- *   1. User sets amount + unit
- *   2. Clicks "Generate Link"
- *   3. Backend returns a signed URL valid for the chosen duration
- *   4. URL is displayed with a Copy button
+ *   1. User clicks "Generate Link"
+ *   2. Backend returns a permanent URL
+ *   3. URL is displayed with a Copy button
  *
  * Props:
  *   show    — boolean
@@ -21,46 +16,20 @@ import axios from 'axios';
  *   file    — { id, title } | null
  */
 export default function ShareLinkModal({ show, onClose, file }) {
-    const [amount, setAmount]             = useState(24);
-    const [unit, setUnit]                 = useState('hours');   // 'hours' | 'days'
-    const [unitMenuOpen, setUnitMenuOpen] = useState(false);     // custom dropdown open state
     const [generatedUrl, setGeneratedUrl] = useState('');
     const [loading, setLoading]           = useState(false);
     const [copied, setCopied]             = useState(false);
     const [error, setError]               = useState('');
-
-    // Ref used to close the unit dropdown when clicking outside
-    const unitMenuRef = useRef(null);
-
-    /* ── Close unit dropdown on outside click ── */
-    useEffect(() => {
-        const handler = (e) => {
-            if (unitMenuRef.current && !unitMenuRef.current.contains(e.target)) {
-                setUnitMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
 
     /* ── Reset all state when the modal closes ── */
     const handleClose = () => {
         setGeneratedUrl('');
         setCopied(false);
         setError('');
-        setAmount(24);
-        setUnit('hours');
-        setUnitMenuOpen(false);
         onClose();
     };
 
-    /* ── Unit options ── */
-    const unitOptions = [
-        { value: 'hours', label: 'Hours' },
-        { value: 'days',  label: 'Days'  },
-    ];
-
-    /* ── Generate the signed link via the backend ── */
+    /* ── Generate the permanent share link via the backend ── */
     const handleGenerate = async () => {
         if (!file) return;
         setLoading(true);
@@ -69,8 +38,6 @@ export default function ShareLinkModal({ show, onClose, file }) {
         try {
             const res = await axios.post('/share-link', {
                 file_id: file.id,
-                amount:  parseInt(amount, 10),
-                unit,
             });
             setGeneratedUrl(res.data.url);
         } catch (e) {
@@ -90,19 +57,11 @@ export default function ShareLinkModal({ show, onClose, file }) {
             el.value = generatedUrl;
             document.body.appendChild(el);
             el.select();
-            document.execCommand('copy');
             document.body.removeChild(el);
         }
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
     };
-
-    /* ── Human-readable expiry summary ── */
-    const expiryLabel = `${amount} ${
-        unit === 'hours'
-            ? amount === 1 ? 'hour' : 'hours'
-            : amount === 1 ? 'day'  : 'days'
-    }`;
 
     return (
         <Modal show={show} onClose={handleClose} maxWidth="sm">
@@ -136,83 +95,6 @@ export default function ShareLinkModal({ show, onClose, file }) {
                     </button>
                 </div>
 
-                {/* ── Token Expiry label ── */}
-                <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mb-3">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Token Expiry
-                </div>
-
-                {/* ── Amount input + custom unit picker ── */}
-                <div className="flex gap-3 mb-3">
-
-                    {/* Numeric amount input */}
-                    <input
-                        type="number"
-                        min={1}
-                        max={unit === 'hours' ? 720 : 365}
-                        value={amount}
-                        onChange={(e) => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="flex-1 border border-gray-200 bg-gray-50 rounded-xl px-4 py-2.5 text-sm text-gray-900 font-semibold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-colors outline-none"
-                    />
-
-                    {/* ── Custom unit dropdown — fully styled, rounded corners ── */}
-                    <div className="relative" ref={unitMenuRef}>
-                        {/* Trigger button — shows selected unit */}
-                        <button
-                            type="button"
-                            onClick={() => setUnitMenuOpen(!unitMenuOpen)}
-                            className={`flex items-center gap-2 border-2 rounded-xl px-4 py-2.5 text-sm font-semibold bg-white transition-colors min-w-[100px] justify-between ${
-                                unitMenuOpen
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-blue-400 text-gray-800 hover:border-blue-500'
-                            }`}
-                        >
-                            <span>{unitOptions.find(o => o.value === unit)?.label}</span>
-                            {/* Chevron — rotates when open */}
-                            <svg
-                                className={`w-4 h-4 transition-transform shrink-0 ${unitMenuOpen ? 'rotate-180' : ''}`}
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-
-                        {/* Dropdown options list — rounded corners, shadow */}
-                        {unitMenuOpen && (
-                            <div className="absolute right-0 top-full mt-1.5 z-50 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden min-w-[100px]">
-                                {unitOptions.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        onClick={() => {
-                                            setUnit(option.value);
-                                            setUnitMenuOpen(false);
-                                            // Reset amount to a sensible default when switching units
-                                            if (option.value === 'hours' && amount > 720) setAmount(24);
-                                            if (option.value === 'days'  && amount > 365) setAmount(7);
-                                        }}
-                                        className={`w-full px-5 py-3 text-sm font-semibold text-left transition-colors ${
-                                            unit === option.value
-                                                ? 'bg-blue-600 text-white'
-                                                : 'text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {option.label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* ── Helper text ── */}
-                <p className="text-xs text-gray-400 mb-5">
-                    Guests with this link can access the document until it expires ({expiryLabel}).
-                </p>
-
                 {/* ── Error message ── */}
                 {error && (
                     <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
@@ -232,7 +114,7 @@ export default function ShareLinkModal({ show, onClose, file }) {
                                 onClick={handleCopy}
                                 className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
                                     copied
-                                        ? 'bg-emerald-100 text-emerald-700'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                                 }`}
                             >

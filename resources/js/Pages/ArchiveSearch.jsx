@@ -41,7 +41,7 @@ export default function ArchiveSearch({ recentUploads = [], categories = [] }) {
                 
                 {/* Search Area */}
                 <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] relative">
-                    <div className="relative flex items-center w-full h-12 rounded-full bg-gray-50 border border-transparent focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent transition-all overflow-hidden">
+                    <div className="relative flex items-center w-full h-12 rounded-full bg-gray-50 border border-transparent focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all overflow-hidden">
                         <div className="pl-6 pr-3 text-gray-400">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
@@ -73,7 +73,7 @@ export default function ArchiveSearch({ recentUploads = [], categories = [] }) {
                         {activeCategory && (
                             <>
                                 <svg className="w-5 h-5 text-gray-400 mx-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-                                <span className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100">
+                                <span className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100">
                                     {categories.find(c => c.id === activeCategory)?.name}
                                 </span>
                             </>
@@ -86,7 +86,7 @@ export default function ArchiveSearch({ recentUploads = [], categories = [] }) {
                             onClick={() => setIsNewDropdownOpen(!isNewDropdownOpen)}
                             className="flex items-center bg-white border border-gray-200 rounded-xl px-5 py-2.5 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all gap-2"
                         >
-                            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                             <span className="font-semibold text-gray-700">New</span>
                         </button>
                         
@@ -122,15 +122,15 @@ export default function ArchiveSearch({ recentUploads = [], categories = [] }) {
                                         onClick={() => setActiveCategory(category.id === activeCategory ? null : category.id)}
                                         className={`flex items-center p-4 rounded-xl border transition-all cursor-pointer group select-none ${
                                             activeCategory === category.id 
-                                                ? 'border-emerald-500 bg-emerald-50/50' 
+                                                ? 'border-blue-500 bg-blue-50/50' 
                                                 : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                                         }`}
                                     >
-                                        <svg className={`w-6 h-6 mr-3 shrink-0 transition-colors ${activeCategory === category.id ? 'text-emerald-600' : 'text-gray-400 group-hover:text-gray-600'}`} viewBox="0 0 24 24" fill="currentColor">
+                                        <svg className={`w-6 h-6 mr-3 shrink-0 transition-colors ${activeCategory === category.id ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
                                         </svg>
                                         <div className="overflow-hidden">
-                                            <h4 className={`text-[14px] font-semibold truncate transition-colors ${activeCategory === category.id ? 'text-emerald-900' : 'text-gray-700 group-hover:text-gray-900'}`}>
+                                            <h4 className={`text-[14px] font-semibold truncate transition-colors ${activeCategory === category.id ? 'text-blue-900' : 'text-gray-700 group-hover:text-gray-900'}`}>
                                                 {category.name}
                                             </h4>
                                         </div>

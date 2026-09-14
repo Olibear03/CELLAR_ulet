@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CriticReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ArchiveFileController;
 use App\Http\Controllers\CategoryController;
@@ -11,6 +12,12 @@ Route::get('/', function () {
     // Landing page — shows login button + Submit Client Request button
     return Inertia::render('Welcome');
 });
+
+Route::get('/public-critics', function () {
+    return Inertia::render('PublicAccreditedCritics');
+})->name('public-critics');
+
+Route::redirect('/evaluator-login', '/login')->name('evaluator.login');
 
 // ── Public Client Request Form (no login required) ──────────────────────────
 Route::get('/request', function () {

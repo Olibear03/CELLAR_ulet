@@ -4,12 +4,11 @@ import { useState } from 'react';
 import FilePreviewModal from '@/Components/FilePreviewModal';
 
 export default function Dashboard({
-    totalFiles        = 0,
-    totalLinks        = 0,
-    requestsThisMonth = 0,
-    monthlyUploads    = {},
-    recentUploads     = [],
-    favorites         = [],
+    totalFiles     = 0,
+    totalLinks     = 0,
+    monthlyUploads = {},
+    recentUploads  = [],
+    favorites      = [],
 }) {
     const user = usePage().props.auth.user;
     const [previewFile, setPreviewFile]     = useState(null);
@@ -36,7 +35,7 @@ export default function Dashboard({
 
     const StatCard = ({ icon, label, value }) => (
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col gap-3">
-            <div className="bg-emerald-800 w-11 h-11 rounded-xl flex items-center justify-center shrink-0">
+            <div className="bg-blue-800 w-11 h-11 rounded-xl flex items-center justify-center shrink-0">
                 {icon}
             </div>
             <div>
@@ -60,15 +59,12 @@ export default function Dashboard({
                 </div>
 
                 {/* Stat cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <StatCard label="Total Files" value={totalFiles}
                         icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
                     />
                     <StatCard label="Total Links" value={totalLinks}
                         icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>}
-                    />
-                    <StatCard label="Client Requests This Month" value={requestsThisMonth}
-                        icon={<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
                     />
                 </div>
 
@@ -120,7 +116,7 @@ export default function Dashboard({
                                                 {val} upload{val !== 1 ? 's' : ''}
                                             </div>
                                             <div className="w-full flex items-end" style={{ height: '100%' }}>
-                                                <div className={`w-full rounded-t-md transition-all duration-500 ${isCurrent ? 'bg-emerald-600' : 'bg-emerald-200 group-hover:bg-emerald-400'}`}
+                                                <div className={`w-full rounded-t-md transition-all duration-500 ${isCurrent ? 'bg-blue-600' : 'bg-blue-200 group-hover:bg-blue-400'}`}
                                                     style={{ height: `${Math.max(heightPct, val > 0 ? 4 : 0)}%` }} />
                                             </div>
                                         </div>
@@ -129,18 +125,18 @@ export default function Dashboard({
                             </div>
                             <div className="flex gap-1.5">
                                 {MONTHS.map((month, i) => (
-                                    <div key={month} className={`flex-1 text-center text-[10px] font-medium ${i === new Date().getMonth() ? 'text-emerald-700 font-bold' : 'text-gray-400'}`}>
+                                    <div key={month} className={`flex-1 text-center text-[10px] font-medium ${i === new Date().getMonth() ? 'text-blue-700 font-bold' : 'text-gray-400'}`}>
                                         {month}
                                     </div>
                                 ))}
                             </div>
                             <div className="flex items-center gap-4 mt-1">
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-3 h-3 rounded-sm bg-emerald-600" />
+                                    <div className="w-3 h-3 rounded-sm bg-blue-600" />
                                     <span className="text-[11px] text-gray-500">Current month</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <div className="w-3 h-3 rounded-sm bg-emerald-200" />
+                                    <div className="w-3 h-3 rounded-sm bg-blue-200" />
                                     <span className="text-[11px] text-gray-500">Other months</span>
                                 </div>
                                 <span className="ml-auto text-[11px] text-gray-400">{new Date().getFullYear()}</span>
@@ -152,7 +148,7 @@ export default function Dashboard({
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-gray-900">Bookmarks</h2>
-                            <Link href={route('favorites.index')} className="text-xs text-emerald-700 font-semibold hover:underline">
+                            <Link href={route('favorites.index')} className="text-xs text-blue-700 font-semibold hover:underline">
                                 View all
                             </Link>
                         </div>
@@ -178,7 +174,7 @@ export default function Dashboard({
                                     return (
                                         <li key={file.id} onClick={handleClick}
                                             className="flex items-center gap-3 cursor-pointer rounded-xl p-2 -mx-2 hover:bg-gray-50 transition-colors group">
-                                            <div className={`p-2 rounded-lg shrink-0 ${isFolder ? 'bg-amber-100 text-amber-500' : 'bg-emerald-800 text-white'}`}>
+                                            <div className={`p-2 rounded-lg shrink-0 ${isFolder ? 'bg-blue-100 text-blue-500' : 'bg-blue-800 text-white'}`}>
                                                 {isLink ? (
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                                                 ) : isFolder ? (
@@ -188,14 +184,14 @@ export default function Dashboard({
                                                 )}
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">{file.title}</p>
+                                                <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-700 transition-colors">{file.title}</p>
                                                 <p className="text-xs text-gray-400 truncate">
                                                     {file.user?.name ?? 'Unknown'}
                                                     {file.metadata?.year && ` · ${file.metadata.year}`}
                                                     {file.metadata?.rating_period && ` ${file.metadata.rating_period}`}
                                                 </p>
                                             </div>
-                                            <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-emerald-500 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                                             </svg>
                                         </li>
@@ -225,7 +221,7 @@ export default function Dashboard({
                         <ul className="divide-y divide-gray-100">
                             {recentUploads.map((file) => (
                                 <li key={file.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/60 transition-colors">
-                                    <div className="bg-emerald-800 p-2.5 rounded-xl shrink-0">
+                                    <div className="bg-blue-800 p-2.5 rounded-xl shrink-0">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
