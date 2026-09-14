@@ -142,7 +142,9 @@ export default function UploadModal({ show, onClose, categories = [], defaultCat
         });
     };
 
-    const canSubmit = data.file && (isFolderUpload || (data.title && data.title.trim())) && data.author && data.author.trim() && data.year && data.rating_period && !processing;
+    const hasFiles = isFolderUpload ? data.file?.length > 0 : Boolean(data.file);
+    const hasTitle = isFolderUpload || Boolean(data.title?.trim());
+    const canSubmit = hasFiles && hasTitle && data.year && data.rating_period && !processing;
 
     return (
         <Modal show={show} onClose={onClose} maxWidth="lg">
@@ -252,7 +254,7 @@ export default function UploadModal({ show, onClose, categories = [], defaultCat
                         )}
                         <div className={isFolderUpload ? 'col-span-2' : ''}>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Author <span className="text-red-500">*</span>
+                                Author <span className="text-gray-400">(optional)</span>
                             </label>
                             <input
                                 type="text"

@@ -29,6 +29,7 @@ class CriticRegisterController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:255',
+            'college'  => 'required|string|max:100',
             'email'    => [
                 'required',
                 'string',
@@ -50,6 +51,7 @@ class CriticRegisterController extends Controller
             'email'      => $request->email,
             'password'   => Hash::make($request->password),
             'is_critic'  => true,
+            'college'    => $request->college,
             'status'     => 'pending',
         ]);
 

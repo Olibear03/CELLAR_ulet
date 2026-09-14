@@ -52,7 +52,7 @@ export default function Welcome() {
                     
                     {/* CARD 1: INTERNAL OPERATIONS */}
                     <Link
-                        href={route('login')}
+                        href={route('operator.login')}
                         className="group bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl p-6 transition-all duration-200 shadow-sm flex flex-col justify-between"
                     >
                         <div>
@@ -77,7 +77,7 @@ export default function Welcome() {
 
                     {/* CARD 2: EVALUATOR PORTAL */}
                     <Link
-                        href={route('login')} 
+                        href={route('evaluator.login')} 
                         className="group bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl p-6 transition-all duration-200 shadow-sm flex flex-col justify-between"
                     >
                         <div>

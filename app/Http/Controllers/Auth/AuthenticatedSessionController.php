@@ -16,11 +16,14 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'portal' => in_array($request->string('portal')->value(), ['operator', 'evaluator'], true)
+                ? $request->string('portal')->value()
+                : null,
         ]);
     }
 
@@ -32,6 +35,25 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $user = Auth::user();
+        $portal = $request->string('portal')->value();
+
+        $allowed = match ($portal) {
+            'evaluator' => $user->is_critic,
+            'operator' => $user->is_director || $user->is_assistant || $user->is_staff,
+            default => true,
+        };
+
+        if (! $allowed) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => $portal === 'evaluator'
+                    ? 'This portal is for English Critics only.'
+                    : 'This portal is for CELLAR Directors, Admin Assistants, and Staff only.',
+            ]);
+        }
 
         // Block non-director users who aren't active yet
         if (! $user->is_director) {

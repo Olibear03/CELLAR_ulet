@@ -2,24 +2,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
-const MOCK_CRITICS = [
-    { id: 'mc-1', name: 'Critic Dummy 1', email: 'dummy1@cvsu.edu.ph', status: 'active', college: 'CAFENR', created_at: '2025-09-15T08:00:00Z', critic_summary_reports_count: 3 },
-    { id: 'mc-2', name: 'Critic Dummy 2', email: 'dummy2@cvsu.edu.ph', status: 'active', college: 'CAS', created_at: '2025-10-02T08:00:00Z', critic_summary_reports_count: 4 },
-    { id: 'mc-3', name: 'Critic Dummy 3', email: 'dummy3@cvsu.edu.ph', status: 'active', college: 'CED', created_at: '2025-11-20T08:00:00Z', critic_summary_reports_count: 3 },
-    { id: 'mc-4', name: 'Critic Dummy 4', email: 'dummy4@cvsu.edu.ph', status: 'active', college: 'CEIT', created_at: '2026-01-10T08:00:00Z', critic_summary_reports_count: 3 },
-    { id: 'mc-5', name: 'Critic Dummy 5', email: 'dummy5@cvsu.edu.ph', status: 'active', college: 'CEMDS', created_at: '2026-02-05T08:00:00Z', critic_summary_reports_count: 3 },
-    { id: 'mc-6', name: 'Critic Dummy 6', email: 'dummy6@cvsu.edu.ph', status: 'pending', college: 'CON', created_at: '2026-05-28T08:00:00Z', critic_summary_reports_count: 3 },
-    { id: 'mc-7', name: 'Critic Dummy 7', email: 'dummy7@cvsu.edu.ph', status: 'active', college: 'CVMBS', created_at: '2026-03-14T08:00:00Z', critic_summary_reports_count: 3 },
-];
-
 /**
  * CriticManagement — Director-only page for managing English Critic accounts.
  * English Critics self-register at /register/critic.
  * This page lets the Director approve, deactivate, reset passwords, and delete them.
  */
-export default function CriticManagement({ critics: _dbCritics = [] }) {
-    // Use static mock data for wireframe
-    const critics = MOCK_CRITICS;
+export default function CriticManagement({ critics = [] }) {
 
     const [resetTarget,  setResetTarget]  = useState(null);
     const [newPassword,  setNewPassword]  = useState('');

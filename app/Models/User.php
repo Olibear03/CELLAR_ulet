@@ -21,6 +21,7 @@ class User extends Authenticatable
         'is_assistant',
         'is_staff',
         'is_critic',
+        'college',
         'status',
     ];
 

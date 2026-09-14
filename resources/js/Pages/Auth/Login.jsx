@@ -6,11 +6,18 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ status, canResetPassword, portal = 'operator' }) {
+    const isEvaluator = portal === 'evaluator';
+    const portalTitle = isEvaluator ? 'Evaluator Portal' : 'CELLAR Operator Login';
+    const portalDescription = isEvaluator
+        ? 'English Critics only. New accounts require Director approval.'
+        : 'For Directors, Admin Assistants, and Staff.';
+
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
+        portal,
     });
 
     const submit = (e) => {
@@ -23,7 +30,16 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title={isEvaluator ? 'Evaluator Login' : 'CELLAR Operator Login'} />
+
+            <div className={`mb-6 rounded-lg border px-4 py-3 ${isEvaluator ? 'border-amber-200 bg-amber-50' : 'border-blue-200 bg-blue-50'}`}>
+                <h1 className={`text-xl font-semibold ${isEvaluator ? 'text-amber-900' : 'text-blue-900'}`}>
+                    {portalTitle}
+                </h1>
+                <p className={`mt-1 text-sm ${isEvaluator ? 'text-amber-800' : 'text-blue-800'}`}>
+                    {portalDescription}
+                </p>
+            </div>
 
             {status && (
                 <div className="mb-4 text-sm font-medium text-blue-600">
@@ -98,8 +114,8 @@ export default function Login({ status, canResetPassword }) {
                     <p className="mt-4 text-center text-sm text-stone-700">
                         Don't have an account?{' '}
                         <Link
-                            href={route('register')}
-                            className="font-medium text-teal-600 hover:text-teal-700"
+                            href={isEvaluator ? route('critic.register') : route('register')}
+                            className={`font-medium ${isEvaluator ? 'text-amber-700 hover:text-amber-800' : 'text-teal-600 hover:text-teal-700'}`}
                         >
                             Register
                         </Link>

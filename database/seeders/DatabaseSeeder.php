@@ -13,6 +13,13 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        foreach ([
+            ['name' => 'general_doc', 'description' => 'Institutional documents'],
+            ['name' => 'Links', 'description' => 'External links'],
+        ] as $category) {
+            \App\Models\Category::firstOrCreate(['name' => $category['name']], $category);
+        }
+
         // Director account
         User::firstOrCreate(
             ['email' => 'director@cellar.edu.ph'],
@@ -34,5 +41,32 @@ class DatabaseSeeder extends Seeder
                 'status'       => 'active',
             ]
         );
+
+        $critics = [
+            ['name' => 'Critic Dummy 1', 'email' => 'critic1@cvsu.edu.ph', 'college' => 'CAS', 'status' => 'active'],
+            ['name' => 'Critic Dummy 2', 'email' => 'critic2@cvsu.edu.ph', 'college' => 'CEIT', 'status' => 'active'],
+            ['name' => 'Critic Dummy 3', 'email' => 'critic3@cvsu.edu.ph', 'college' => 'CAFENR', 'status' => 'active'],
+            ['name' => 'Critic Dummy 4', 'email' => 'critic4@cvsu.edu.ph', 'college' => 'CEMDS', 'status' => 'active'],
+            ['name' => 'Critic Dummy 5', 'email' => 'critic5@cvsu.edu.ph', 'college' => 'CON', 'status' => 'active'],
+            ['name' => 'Critic Dummy 6', 'email' => 'critic6@cvsu.edu.ph', 'college' => 'CED', 'status' => 'pending'],
+            ['name' => 'Critic Dummy 7', 'email' => 'critic7@cvsu.edu.ph', 'college' => 'CVMBS', 'status' => 'active'],
+        ];
+
+        foreach ($critics as $critic) {
+            $user = User::firstOrNew(['email' => $critic['email']]);
+            $user->fill([
+                'name'       => $critic['name'],
+                'college'    => $critic['college'],
+                'is_critic'  => true,
+                'status'     => $critic['status'],
+            ]);
+
+            if (! $user->exists) {
+                $user->password = Hash::make('password');
+                $user->email_verified_at = now();
+            }
+
+            $user->save();
+        }
     }
 }

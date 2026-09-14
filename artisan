@@ -13,6 +13,12 @@ require __DIR__.'/vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/bootstrap/app.php';
 
+$arguments = $_SERVER['argv'];
+if (($arguments[1] ?? null) === 'serve' && ! in_array('--no-reload', $arguments, true)) {
+	$arguments[] = '--no-reload';
+	$_SERVER['argv'] = $arguments;
+}
+
 $status = $app->handleCommand(new ArgvInput);
 
 exit($status);

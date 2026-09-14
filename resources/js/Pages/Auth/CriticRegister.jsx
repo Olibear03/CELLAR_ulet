@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError';
 export default function CriticRegister() {
     const { data, setData, post, processing, errors } = useForm({
         name:                  '',
+        college:               '',
         email:                 '',
         password:              '',
         password_confirmation: '',
@@ -42,6 +43,21 @@ export default function CriticRegister() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">College</label>
+                        <select value={data.college} onChange={e => setData('college', e.target.value)} className={inputCls} required>
+                            <option value="">Select your college</option>
+                            <option value="CAFENR">CAFENR</option>
+                            <option value="CAS">CAS</option>
+                            <option value="CED">CED</option>
+                            <option value="CEIT">CEIT</option>
+                            <option value="CEMDS">CEMDS</option>
+                            <option value="CON">CON</option>
+                            <option value="CVMBS">CVMBS</option>
+                        </select>
+                        <InputError message={errors.college} className="mt-1" />
+                    </div>
+
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
                         <input
@@ -109,7 +125,7 @@ export default function CriticRegister() {
 
                 <p className="text-center text-gray-500 text-xs mt-5">
                     Already have an account?{' '}
-                    <Link href={route('login')} className="text-blue-600 font-semibold hover:underline">
+                    <Link href={route('evaluator.login')} className="text-blue-600 font-semibold hover:underline">
                         Log in
                     </Link>
                 </p>

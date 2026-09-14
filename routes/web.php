@@ -4,6 +4,8 @@ use App\Http\Controllers\CriticReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ArchiveFileController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Auth\CriticRegisterController;
+use App\Http\Controllers\ShareController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,7 +19,66 @@ Route::get('/public-critics', function () {
     return Inertia::render('PublicAccreditedCritics');
 })->name('public-critics');
 
-Route::redirect('/evaluator-login', '/login')->name('evaluator.login');
+Route::get('/submit-report', [CriticReportController::class, 'create'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.report.create');
+
+Route::post('/submit-report', [CriticReportController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.report.store');
+
+Route::get('/critic-reports', [CriticReportController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.reports.index');
+
+Route::get('/register/critic', [CriticRegisterController::class, 'create'])
+    ->middleware('guest')
+    ->name('critic.register');
+
+Route::post('/register/critic', [CriticRegisterController::class, 'store'])
+    ->middleware('guest')
+    ->name('critic.register.store');
+
+Route::get('/critic-management', function () {
+    abort_unless(auth()->user()->is_director, 403);
+
+    $critics = \App\Models\User::where('is_critic', true)
+        ->withCount('criticSummaryReports')
+        ->orderBy('name')
+        ->get(['id', 'name', 'email', 'college', 'status', 'created_at']);
+
+    return Inertia::render('CriticManagement', ['critics' => $critics]);
+})->middleware(['auth', 'verified'])->name('critic.management');
+
+Route::patch('/critic-management/{id}/approve', function ($id) {
+    abort_unless(auth()->user()->is_director, 403);
+    \App\Models\User::where('is_critic', true)->findOrFail($id)->update(['status' => 'active']);
+    return redirect()->back()->with('success', 'Critic approved.');
+})->middleware(['auth', 'verified'])->name('critic.management.approve');
+
+Route::patch('/critic-management/{id}/deactivate', function ($id) {
+    abort_unless(auth()->user()->is_director, 403);
+    \App\Models\User::where('is_critic', true)->findOrFail($id)->update(['status' => 'deactivated']);
+    return redirect()->back()->with('success', 'Critic deactivated.');
+})->middleware(['auth', 'verified'])->name('critic.management.deactivate');
+
+Route::patch('/critic-management/{id}/reset-password', function (\Illuminate\Http\Request $request, $id) {
+    abort_unless(auth()->user()->is_director, 403);
+    $request->validate(['password' => 'required|string|min:8']);
+    \App\Models\User::where('is_critic', true)->findOrFail($id)
+        ->update(['password' => \Illuminate\Support\Facades\Hash::make($request->password)]);
+    return redirect()->back()->with('success', 'Critic password reset.');
+})->middleware(['auth', 'verified'])->name('critic.management.reset-password');
+
+Route::delete('/critic-management/{id}', function ($id) {
+    abort_unless(auth()->user()->is_director, 403);
+    \App\Models\User::where('is_critic', true)->findOrFail($id)->delete();
+    return redirect()->back()->with('success', 'Critic deleted.');
+})->middleware(['auth', 'verified'])->name('critic.management.destroy');
+
+Route::get('/official-receipt', function () {
+    return Inertia::render('OfficialReceipt');
+})->middleware(['auth', 'verified'])->name('critic.receipt.create');
 
 // ── Public Client Request Form (no login required) ──────────────────────────
 Route::get('/request', function () {
@@ -365,13 +426,17 @@ Route::delete('/favorites/{id}', function ($id) {
 })->middleware(['auth', 'verified'])->name('favorites.destroy');
 
 Route::get('/security', function () {
-    return Inertia::render('Security', [
+    abort_unless(auth()->user()->is_director || auth()->user()->is_assistant, 403);
+
+    return Inertia::render('AccountManagement', [
         'users' => \App\Models\User::all(),
         'logs' => \App\Models\ActivityLog::with('user')->latest()->take(20)->get(),
     ]);
 })->middleware(['auth', 'verified'])->name('security');
 
 Route::post('/security/users', function (\Illuminate\Http\Request $request) {
+    abort_unless($request->user()->is_director || $request->user()->is_assistant, 403);
+
     $request->validate([
         'name' => 'required|string|max:255',
         'email' => 'required|string|email|max:255|unique:users',
@@ -382,7 +447,8 @@ Route::post('/security/users', function (\Illuminate\Http\Request $request) {
         'name' => $request->name,
         'email' => $request->email,
         'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-        'role' => 'admin assistant',
+        'is_assistant' => true,
+        'status' => 'active',
     ]);
 
     \App\Models\ActivityLog::create([
@@ -398,41 +464,43 @@ Route::post('/security/users', function (\Illuminate\Http\Request $request) {
 // Promote an admin_assistant to admin (director only)
 Route::patch('/security/users/{id}/promote', function (\Illuminate\Http\Request $request, $id) {
     // Only directors can promote
-    if ($request->user()->role !== 'director') {
+    if (! $request->user()->is_director) {
         abort(403, 'Only the director can promote users.');
     }
 
     $target = \App\Models\User::findOrFail($id);
 
     // Only assistants can be promoted
-    if ($target->role !== 'admin_assistant') {
+    if (! $target->is_assistant) {
         return redirect()->back()->withErrors(['promote' => 'Only admin assistants can be promoted.']);
     }
 
-    $target->update(['role' => 'admin']);
+    $target->update(['is_assistant' => false, 'is_staff' => true]);
 
     return redirect()->back()->with('success', "{$target->name} has been promoted to Admin.");
 })->middleware(['auth', 'verified'])->name('security.users.promote');
 
 // Demote an admin back to assistant (director only)
 Route::patch('/security/users/{id}/demote', function (\Illuminate\Http\Request $request, $id) {
-    if ($request->user()->role !== 'director') {
+    if (! $request->user()->is_director) {
         abort(403, 'Only the director can demote users.');
     }
 
     $target = \App\Models\User::findOrFail($id);
 
-    if ($target->role !== 'admin') {
+    if (! $target->is_staff) {
         return redirect()->back()->withErrors(['demote' => 'Only admins can be demoted.']);
     }
 
-    $target->update(['role' => 'admin_assistant']);
+    $target->update(['is_staff' => false, 'is_assistant' => true]);
 
     return redirect()->back()->with('success', "{$target->name} has been demoted to Assistant.");
 })->middleware(['auth', 'verified'])->name('security.users.demote');
 
 // Reset a user's password to a temporary one
 Route::patch('/security/users/{id}/reset-password', function (\Illuminate\Http\Request $request, $id) {
+    abort_unless($request->user()->is_director || $request->user()->is_assistant, 403);
+
     $request->validate(['password' => 'required|string|min:8']);
     $target = \App\Models\User::findOrFail($id);
     $target->update(['password' => \Illuminate\Support\Facades\Hash::make($request->password)]);
@@ -441,10 +509,11 @@ Route::patch('/security/users/{id}/reset-password', function (\Illuminate\Http\R
 
 // Toggle active/inactive status (using a status column if present, else just track via role)
 Route::patch('/security/users/{id}/toggle-status', function ($id) {
+    abort_unless(auth()->user()->is_director || auth()->user()->is_assistant, 403);
+
     $target = \App\Models\User::findOrFail($id);
-    // Use a simple active flag stored in the user model if available
-    $current = $target->active ?? true;
-    $target->update(['active' => !$current]);
+    $current = $target->status === 'active';
+    $target->update(['status' => $current ? 'deactivated' : 'active']);
     return redirect()->back()->with('success', $current ? 'User deactivated.' : 'User activated.');
 })->middleware(['auth', 'verified'])->name('security.users.toggle-status');
 
@@ -544,47 +613,12 @@ Route::get('/requests/analytics', function () {
 
 Route::post('/categories', [CategoryController::class, 'store'])->middleware(['auth', 'verified'])->name('categories.store');
 
-// Generate a temporary signed URL for guest file access
-Route::post('/share-link', function (\Illuminate\Http\Request $request) {
-    $request->validate([
-        'file_id' => 'required|exists:archive_files,id',
-        'amount'  => 'required|integer|min:1|max:720',
-        'unit'    => 'required|in:hours,days',
-    ]);
+Route::post('/share-link', [ShareController::class, 'generate'])
+    ->middleware(['auth', 'verified'])
+    ->name('share.generate');
 
-    $minutes = $request->unit === 'days'
-        ? $request->amount * 24 * 60
-        : $request->amount * 60;
-
-    // Build a signed URL that expires after the chosen duration
-    $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-        'share.view',
-        now()->addMinutes($minutes),
-        ['file' => $request->file_id]
-    );
-
-    return response()->json(['url' => $url]);
-})->middleware(['auth', 'verified'])->name('share.generate');
-
-// Public guest-access route — validates the signature then serves the file
-Route::get('/share/{file}', function (\Illuminate\Http\Request $request, $fileId) {
-    if (! $request->hasValidSignature()) {
-        abort(403, 'This link has expired or is invalid.');
-    }
-
-    $file = \App\Models\ArchiveFile::findOrFail($fileId);
-
-    // Stream the file directly so the guest never needs to log in
-    $path = storage_path('app/public/' . $file->file_path);
-
-    if (! file_exists($path)) {
-        abort(404, 'File not found.');
-    }
-
-    return response()->file($path, [
-        'Content-Disposition' => 'inline; filename="' . $file->original_filename . '"',
-    ]);
-})->name('share.view');
+Route::get('/share/{token}', [ShareController::class, 'show'])
+    ->name('share.view');
 
 // API: fetch folders for the Move modal folder picker
 Route::get('/api/folders', function (\Illuminate\Http\Request $request) {
