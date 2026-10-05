@@ -131,6 +131,30 @@ Route::get('/request/success', function (\Illuminate\Http\Request $request) {
     ]);
 })->name('client-request.success');
 
+Route::get('/critic-dashboard', function () {
+    abort_unless(auth()->user()->is_critic || auth()->user()->is_director, 403);
+
+    $reports = \App\Models\CriticSummaryReport::where('user_id', auth()->id())
+        ->orderByDesc('created_at')
+        ->get(['id', 'student_name', 'manuscript_title', 'total_amount', 'created_at']);
+
+    $pendingRequests = \App\Models\ClientRequest::where('status', 'pending')
+        ->orderBy('created_at')
+        ->take(5)
+        ->get(['id', 'reference_number', 'client_name', 'research_title', 'request_date', 'created_at']);
+
+    return Inertia::render('CriticDashboard', [
+        'pendingRequests' => $pendingRequests,
+        'requestTotals' => [
+            'pending' => \App\Models\ClientRequest::where('status', 'pending')->count(),
+            'total' => \App\Models\ClientRequest::count(),
+            'completed' => \App\Models\ClientRequest::whereIn('status', ['approved', 'rejected'])->count(),
+        ],
+        'earnings' => $reports->sum('total_amount'),
+        'recentEarnings' => $reports->take(5)->values(),
+    ]);
+})->middleware(['auth', 'verified'])->name('critic.dashboard');
+
 Route::get('/dashboard', function () {
     $userId = auth()->id();
 
@@ -544,8 +568,10 @@ Route::get('/requests', function () {
     ]);
 })->middleware(['auth', 'verified'])->name('requests.index');
 
-// Approve or reject a request (Director only)
+// Approve or reject a request (Director or English Critic)
 Route::patch('/requests/{id}/review', function (\Illuminate\Http\Request $request, $id) {
+    abort_unless($request->user()->is_director || $request->user()->is_critic, 403);
+
     $request->validate([
         'status'             => 'required|in:approved,rejected',
         'admin_signature'    => 'nullable|string',

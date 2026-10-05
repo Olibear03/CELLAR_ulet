@@ -22,12 +22,26 @@ class DatabaseSeeder extends Seeder
 
         // Director account
         User::firstOrCreate(
+            ['email' => 'director@cvsu.edu.ph'],
+            [
+                'name'        => 'CELLAR Director',
+                'password'    => Hash::make('director123'),
+                'is_director' => true,
+                'is_critic'   => true,
+                'status'      => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        User::firstOrCreate(
             ['email' => 'director@cellar.edu.ph'],
             [
                 'name'        => 'CELLAR Director',
                 'password'    => Hash::make('password'),
                 'is_director' => true,
+                'is_critic'   => true,
                 'status'      => 'active',
+                'email_verified_at' => now(),
             ]
         );
 

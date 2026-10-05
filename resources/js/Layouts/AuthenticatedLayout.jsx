@@ -1,22 +1,48 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function AuthenticatedLayout({ children }) {
     const { auth } = usePage().props;
-    const user         = auth.user;
-    const isDirector   = auth.is_director;
-    const isAssistant  = auth.is_assistant;
-    const isStaff      = auth.is_staff;
-    const isCritic     = auth.is_critic;
-    // DMS access: director, assistant, staff — OR any user with no specific flag (fallback)
-    const isDms        = isDirector || isAssistant || isStaff || (!isCritic);
+    const user = auth.user;
+    const isDirector = auth.is_director;
+    const isAssistant = auth.is_assistant;
+    const isStaff = auth.is_staff;
+    const isCritic = auth.is_critic;
+
+    // Active Role state (Persisted in localStorage for Directors)
+    const [activeRole, setActiveRole] = useState(() => {
+        if (isDirector) {
+            return localStorage.getItem('cellar_active_role') || 'Director';
+        }
+        return isDirector ? 'Director' : isAssistant ? 'Admin Assistant' : isStaff ? 'Staff' : isCritic ? 'English Critic' : 'User';
+    });
+
+    const handleRoleChange = (newRole) => {
+        setActiveRole(newRole);
+        if (isDirector) {
+            localStorage.setItem('cellar_active_role', newRole);
+            if (newRole === 'English Critic') {
+                if (!route().current('critic.report.create') && !route().current('critic.receipt.create')) {
+                    router.visit(route('critic.report.create'));
+                }
+            } else if (newRole === 'Director') {
+                if (route().current('critic.report.create') || route().current('critic.receipt.create')) {
+                    router.visit(route('dashboard'));
+                }
+            }
+        }
+    };
+
+    // Determine if showing DMS sidebar or Critic sidebar
+    const showCriticNav = isDirector ? (activeRole === 'English Critic') : (isCritic && !isDirector && !isAssistant && !isStaff);
+    const showDmsNav = isDirector ? (activeRole === 'Director') : (isDirector || isAssistant || isStaff || (!isCritic));
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const navItemClass = (isActive) => {
-        const base     = 'flex items-center py-2 w-full rounded-xl transition-all';
+        const base = 'flex items-center py-2 w-full rounded-xl transition-all';
         const expanded = isActive
             ? 'px-4 bg-blue-700 text-white shadow-sm hover:bg-blue-700 hover:text-white'
             : 'px-4 text-blue-100 hover:bg-blue-800/50 hover:text-white';
@@ -33,8 +59,8 @@ export default function AuthenticatedLayout({ children }) {
             <div className="w-8 h-px bg-blue-700/60 mx-auto my-3" />
         );
 
-    // Derive role label from flags
-    const roleLabel = isDirector ? 'Director' : isAssistant ? 'Admin Assistant' : isStaff ? 'Staff' : isCritic ? 'English Critic' : 'User';
+    // Derive role label from active role or flags
+    const roleLabel = isDirector ? activeRole : isAssistant ? 'Admin Assistant' : isStaff ? 'Staff' : isCritic ? 'English Critic' : 'User';
 
     return (
         <div className="flex h-screen bg-[#f8fafc]">
@@ -59,9 +85,41 @@ export default function AuthenticatedLayout({ children }) {
 
                 <div className="flex-1 overflow-y-auto py-4 overflow-x-hidden">
 
-                    {/* ── CRITIC-ONLY nav ── */}
-                    {isCritic && !isDms && (
+                    {/* ── CRITIC nav ── */}
+                    {showCriticNav && (
                         <>
+                            <SectionLabel label="Workspace" />
+                            <nav className="space-y-1 flex flex-col items-center px-3">
+                                <Link href={route('critic.dashboard')} className={navItemClass(route().current('critic.dashboard') && !window.location.hash)}>
+                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2v-2z" />
+                                    </svg>
+                                    {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Dashboard</span>}
+                                </Link>
+                                <Link href={`${route('critic.dashboard')}#request-queue`} className={navItemClass(route().current('critic.dashboard') && window.location.hash === '#request-queue')}>
+                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                            d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+                                    </svg>
+                                    {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Requests &amp; Queue</span>}
+                                </Link>
+                                <Link href={`${route('critic.dashboard')}#earnings`} className={navItemClass(route().current('critic.dashboard') && window.location.hash === '#earnings')}>
+                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">My Earnings</span>}
+                                </Link>
+                                <Link href={`${route('critic.dashboard')}#billing-reports`} className={navItemClass(route().current('critic.dashboard') && window.location.hash === '#billing-reports')}>
+                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">EC Billing Reports</span>}
+                                </Link>
+                            </nav>
+
                             <SectionLabel label="My Work" />
                             <nav className="space-y-1 flex flex-col items-center px-3">
                                 <Link href={route('critic.report.create')} className={navItemClass(route().current('critic.report.create'))}>
@@ -81,11 +139,21 @@ export default function AuthenticatedLayout({ children }) {
                                 </Link>
 
                             </nav>
+                            <SectionLabel label="Account" />
+                            <nav className="space-y-1 flex flex-col items-center px-3">
+                                <Link href={route('profile.edit')} className={navItemClass(route().current('profile.edit'))}>
+                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                            d="M5.121 17.804A9 9 0 1118.88 17.8M15 10a3 3 0 11-6 0 3 3 0 016 0zm-3 11a8.96 8.96 0 005.657-2" />
+                                    </svg>
+                                    {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Profile &amp; Schedule</span>}
+                                </Link>
+                            </nav>
                         </>
                     )}
 
                     {/* ── DMS nav (Director + Assistant) ── */}
-                    {isDms && (
+                    {showDmsNav && (
                         <>
                             <SectionLabel label="Workspace" />
                             <nav className="space-y-1 flex flex-col items-center px-3">
@@ -121,7 +189,7 @@ export default function AuthenticatedLayout({ children }) {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                                 d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
-                                        {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Critic Reports</span>}
+                                        {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">EC Billing Report</span>}
                                     </Link>
                                 )}
                             </nav>
@@ -148,7 +216,7 @@ export default function AuthenticatedLayout({ children }) {
                     )}
 
                     {/* ── Management (Director + Assistant only — NOT Staff) ── */}
-                    {(isDirector || isAssistant) && (
+                    {showDmsNav && (isDirector || isAssistant) && (
                         <>
                             <SectionLabel label="Management" />
                             <nav className="space-y-1 flex flex-col items-center px-3">
@@ -180,8 +248,7 @@ export default function AuthenticatedLayout({ children }) {
                 </div>
 
                 {/* Storage widget */}
-                {/* Storage widget */}
-                {!isCritic && (
+                {showDmsNav && (
                     <div className="p-4 border-t border-blue-800 mt-auto shrink-0">
                         {isSidebarOpen ? (
                             <div className="bg-blue-800/40 rounded-2xl p-4 border border-blue-700/50 backdrop-blur-sm">
@@ -239,6 +306,39 @@ export default function AuthenticatedLayout({ children }) {
                     </div>
 
                     <div className="flex items-center space-x-6 shrink-0 border-l border-gray-100 pl-6">
+                        {/* Active Role Selector for Director */}
+                        {isDirector && (
+                            <div className="flex items-center text-sm font-medium text-gray-700">
+                                <span className="mr-2 text-gray-500">Active Role:</span>
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <button type="button" className="inline-flex items-center text-sm font-semibold text-gray-800 hover:text-blue-600 focus:outline-none transition-colors">
+                                            {activeRole}
+                                            <svg className="ml-1 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    </Dropdown.Trigger>
+                                    <Dropdown.Content width="48" align="right">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRoleChange('Director')}
+                                            className={`block w-full text-left px-4 py-2 text-sm leading-5 transition duration-150 ease-in-out ${activeRole === 'Director' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                                        >
+                                            Director
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRoleChange('English Critic')}
+                                            className={`block w-full text-left px-4 py-2 text-sm leading-5 transition duration-150 ease-in-out ${activeRole === 'English Critic' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                                        >
+                                            English Critic
+                                        </button>
+                                    </Dropdown.Content>
+                                </Dropdown>
+                            </div>
+                        )}
+
                         <button className="text-gray-400 hover:text-gray-600 relative transition-colors" aria-label="Notifications">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"

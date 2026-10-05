@@ -36,7 +36,7 @@ class PortalAuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect(route('critic.report.create', absolute: false));
+        $response->assertRedirect(route('critic.dashboard', absolute: false));
     }
 
     public function test_critic_cannot_use_the_operator_portal(): void

@@ -87,9 +87,9 @@ class AuthenticatedSessionController extends Controller
             'location' => 'System',
         ]);
 
-        // Critics land on their summary report page; everyone else → dashboard
+        // Critics land on their workspace; everyone else → dashboard
         if ($user->is_critic && ! $user->is_director && ! $user->is_assistant && ! $user->is_staff) {
-            return redirect()->route('critic.report.create');
+            return redirect()->route('critic.dashboard');
         }
 
         return redirect()->intended(route('dashboard', absolute: false));
