@@ -4,14 +4,24 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 /**
- * CriticManagement — Director-only page for managing English Critic accounts.
+ * CriticManagement — Director and permissioned assistant page for managing English Critic accounts.
  * English Critics self-register at /register/critic.
- * This page lets the Director approve, deactivate, reset passwords, and delete them.
+ * Directors can also register critics directly; authorized managers can approve, deactivate,
+ * reset passwords, and delete accounts.
  */
 export default function CriticManagement({ critics = [] }) {
+    const [createOpen, setCreateOpen] = useState(false);
     const [resetTarget,  setResetTarget]  = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const { auth, flash } = usePage().props;
+    const {
+        data: createData,
+        setData: setCreateData,
+        post: createCritic,
+        processing: creatingCritic,
+        errors: createErrors,
+        reset: resetCreate,
+    } = useForm({ name: '', college: '', email: '', password: '' });
     const {
         data: resetData,
         setData: setResetData,
@@ -22,6 +32,17 @@ export default function CriticManagement({ critics = [] }) {
     } = useForm({ password: '' });
 
     /* ── Actions ── */
+    const submitCreate = (e) => {
+        e.preventDefault();
+        createCritic(route('critic.management.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setCreateOpen(false);
+                resetCreate();
+            },
+        });
+    };
+
     const handleApprove    = (id) => router.patch(route('critic.management.approve', id),    {}, { preserveScroll: true });
     const handleDeactivate = (id) => router.patch(route('critic.management.deactivate', id), {}, { preserveScroll: true });
     const handleDelete     = (id) => {
@@ -65,14 +86,25 @@ export default function CriticManagement({ critics = [] }) {
                             English Critic Management
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">
-                            Manage external English Critic accounts. Critics self-register at{' '}
+                            Manage English Critic accounts. New critics can be added here or self-register at{' '}
                             <a href={route('critic.register')} target="_blank" rel="noopener noreferrer"
                                 className="text-blue-600 font-semibold hover:underline">
                                 /register/critic
                             </a>.
                         </p>
                     </div>
-                    <span className="text-xs font-semibold text-gray-400 self-end">{critics.length} critics total</span>
+                    <div className="flex items-center gap-3 self-end">
+                        {auth.is_director && (
+                            <button type="button" onClick={() => setCreateOpen(true)}
+                                className="flex items-center gap-2 rounded-full bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-800">
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Register Critic
+                            </button>
+                        )}
+                        <span className="text-xs font-semibold text-gray-400">{critics.length} critics total</span>
+                    </div>
                 </div>
 
                 {flash?.success && (
@@ -253,6 +285,69 @@ export default function CriticManagement({ critics = [] }) {
                     )}
                 </div>
             </div>
+
+            {/* ── Register Critic Modal ── */}
+            {createOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div role="dialog" aria-modal="true" aria-labelledby="register-critic-title"
+                        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-7 shadow-xl">
+                        <div className="mb-5 flex items-start justify-between gap-4">
+                            <div>
+                                <h3 id="register-critic-title" className="text-lg font-bold text-gray-900">Register English Critic</h3>
+                                <p className="mt-1 text-sm text-gray-500">This account will be active immediately.</p>
+                            </div>
+                            <button type="button" onClick={() => { setCreateOpen(false); resetCreate(); }}
+                                aria-label="Close registration"
+                                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <form onSubmit={submitCreate} className="space-y-4">
+                            <div>
+                                <label htmlFor="critic-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Full Name</label>
+                                <input id="critic-name" type="text" value={createData.name}
+                                    onChange={e => setCreateData('name', e.target.value)}
+                                    className={inputCls} autoFocus required />
+                                {createErrors.name && <p className="mt-1 text-sm text-red-600">{createErrors.name}</p>}
+                            </div>
+                            <div>
+                                <label htmlFor="critic-college" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">College</label>
+                                <select id="critic-college" value={createData.college}
+                                    onChange={e => setCreateData('college', e.target.value)}
+                                    className={inputCls} required>
+                                    <option value="">Select a college</option>
+                                    {['CAFENR', 'CAS', 'CED', 'CEIT', 'CEMDS', 'CON', 'CVMBS'].map(college => (
+                                        <option key={college} value={college}>{college}</option>
+                                    ))}
+                                </select>
+                                {createErrors.college && <p className="mt-1 text-sm text-red-600">{createErrors.college}</p>}
+                            </div>
+                            <div>
+                                <label htmlFor="critic-email" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">CvSU Email</label>
+                                <input id="critic-email" type="email" value={createData.email}
+                                    onChange={e => setCreateData('email', e.target.value)}
+                                    className={inputCls} placeholder="name@cvsu.edu.ph" required />
+                                {createErrors.email && <p className="mt-1 text-sm text-red-600">{createErrors.email}</p>}
+                            </div>
+                            <div>
+                                <label htmlFor="critic-password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Temporary Password</label>
+                                <input id="critic-password" type="password" value={createData.password}
+                                    onChange={e => setCreateData('password', e.target.value)}
+                                    className={inputCls} minLength={8} autoComplete="new-password" required />
+                                {createErrors.password && <p className="mt-1 text-sm text-red-600">{createErrors.password}</p>}
+                            </div>
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button type="button" onClick={() => { setCreateOpen(false); resetCreate(); }}
+                                    className="px-5 py-2 text-sm font-semibold text-gray-700">Cancel</button>
+                                <button type="submit" disabled={creatingCritic}
+                                    className="rounded-lg bg-blue-700 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50">
+                                    {creatingCritic ? 'Registering…' : 'Register Critic'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* ── Reset Password Modal ── */}
             {resetTarget && (

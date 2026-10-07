@@ -22,7 +22,7 @@ export default function Register() {
     };
 
     return (
-        <GuestLayout>
+        <GuestLayout logoInside>
             <Head title="Register" />
 
             <form onSubmit={submit}>

@@ -36,10 +36,18 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
         $portal = $request->string('portal')->value();
+        $operatorRole = $request->string('operator_role')->value();
+        $isOperatorAccount = $user->is_director || $user->is_assistant || $user->is_staff;
+        $roleMatchesAccount = match ($operatorRole) {
+            'director' => $user->is_director,
+            'assistant' => $user->is_assistant,
+            'staff' => $user->is_staff,
+            default => false,
+        };
 
         $allowed = match ($portal) {
             'evaluator' => $user->is_critic,
-            'operator' => $user->is_director || $user->is_assistant || $user->is_staff,
+            'operator' => $isOperatorAccount && $roleMatchesAccount,
             default => true,
         };
 
@@ -49,9 +57,11 @@ class AuthenticatedSessionController extends Controller
             $request->session()->regenerateToken();
 
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'email' => $portal === 'evaluator'
+                ($portal === 'operator' && $isOperatorAccount ? 'operator_role' : 'email') => $portal === 'evaluator'
                     ? 'This portal is for English Critics only.'
-                    : 'This portal is for CELLAR Directors, Admin Assistants, and Staff only.',
+                    : ($portal === 'operator' && $isOperatorAccount
+                        ? 'The selected role does not match this account.'
+                        : 'This portal is for CELLAR Directors, Admin Assistants, and Staff only.'),
             ]);
         }
 

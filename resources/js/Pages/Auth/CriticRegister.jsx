@@ -1,5 +1,6 @@
 import { Head, useForm, Link } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
+import GuestLayout from '@/Layouts/GuestLayout';
 
 export default function CriticRegister() {
     const { data, setData, post, processing, errors } = useForm({
@@ -18,25 +19,10 @@ export default function CriticRegister() {
     const inputCls = 'w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-colors outline-none';
 
     return (
-        <div className="min-h-screen bg-blue-900 flex flex-col items-center justify-center px-4 py-12">
+        <GuestLayout logoInside>
             <Head title="Critic Registration — CELLAR" />
 
-            {/* ── Brand ── */}
-            <div className="flex items-center gap-3 mb-8">
-                <div className="bg-blue-700 p-2 rounded-xl">
-                    <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <p className="text-white text-[16px] font-bold leading-tight">CELLAR</p>
-                    <p className="text-blue-300 text-[11px]">Critic Self-Registration</p>
-                </div>
-            </div>
-
-            {/* ── Card ── */}
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+            <div>
                 <h1 className="text-2xl font-extrabold text-gray-900 mb-1">Create your account</h1>
                 <p className="text-gray-500 text-sm mb-6">
                     For external university critics only. Your account will be reviewed before activation.
@@ -130,6 +116,6 @@ export default function CriticRegister() {
                     </Link>
                 </p>
             </div>
-        </div>
+        </GuestLayout>
     );
 }

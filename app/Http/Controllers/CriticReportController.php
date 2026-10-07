@@ -64,7 +64,7 @@ class CriticReportController extends Controller
      */
     public function index(): Response
     {
-        abort_unless(auth()->user()->is_director, 403);
+        abort_unless(auth()->user()->canAccessCriticReports(), 403);
 
         $reports   = CriticSummaryReport::with('user')->orderBy('created_at', 'desc')->get();
         $total     = $reports->count();
@@ -83,7 +83,7 @@ class CriticReportController extends Controller
 
     public function updatePaymentStatus(Request $request, CriticSummaryReport $report): RedirectResponse
     {
-        abort_unless($request->user()->is_director, 403);
+        abort_unless($request->user()->canAccessCriticReports(), 403);
 
         $validated = $request->validate([
             'payment_status' => 'required|in:pending,paid',

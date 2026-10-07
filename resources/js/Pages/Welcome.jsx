@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 /**
  * Welcome / Landing page — Clean, minimal plain style.
@@ -14,10 +14,7 @@ export default function Welcome() {
             {/* ── Header ── */}
             <header className="px-8 py-5 flex items-center gap-4 bg-white border-b border-slate-200 w-full relative z-10">
                 <div className="bg-[#1e40af] p-2 rounded-lg shrink-0 shadow-sm">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
+                    <ApplicationLogo className="h-8 w-8 object-contain" />
                 </div>
                 <div>
                     <p className="text-slate-900 text-[16px] font-black tracking-wider leading-tight">CELLAR</p>
@@ -227,4 +224,3 @@ function RegistrationCard() {
         </form>
     );
 }
-

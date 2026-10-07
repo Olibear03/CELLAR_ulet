@@ -12,15 +12,42 @@ class PortalAuthenticationTest extends TestCase
 
     public function test_operator_roles_can_use_the_operator_portal(): void
     {
-        foreach ([User::factory()->director()->create(), User::factory()->assistant()->create(), User::factory()->staff()->create()] as $user) {
+        foreach ([
+            'director' => User::factory()->director()->create(),
+            'assistant' => User::factory()->assistant()->create(),
+            'staff' => User::factory()->staff()->create(),
+        ] as $role => $user) {
             $this->post('/login', [
                 'email' => $user->email,
                 'password' => 'password',
                 'portal' => 'operator',
+                'operator_role' => $role,
             ])->assertRedirect(route('dashboard', absolute: false));
 
             $this->assertAuthenticatedAs($user);
             $this->post('/logout');
+        }
+    }
+
+    public function test_operator_role_selection_must_match_the_account_role(): void
+    {
+        $users = [
+            'director' => User::factory()->director()->create(),
+            'assistant' => User::factory()->assistant()->create(),
+            'staff' => User::factory()->staff()->create(),
+        ];
+
+        foreach ($users as $actualRole => $user) {
+            foreach (array_diff(['director', 'assistant', 'staff'], [$actualRole]) as $selectedRole) {
+                $this->from('/login?portal=operator')->post('/login', [
+                    'email' => $user->email,
+                    'password' => 'password',
+                    'portal' => 'operator',
+                    'operator_role' => $selectedRole,
+                ])->assertSessionHasErrors('operator_role');
+
+                $this->assertGuest();
+            }
         }
     }
 

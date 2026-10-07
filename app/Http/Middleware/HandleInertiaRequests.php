@@ -39,6 +39,8 @@ class HandleInertiaRequests extends Middleware
                 'is_assistant' => (bool) ($user?->is_assistant),
                 'is_staff'     => (bool) ($user?->is_staff),
                 'is_critic'    => (bool) ($user?->is_critic),
+                'can_access_critic_reports' => (bool) ($user?->canAccessCriticReports()),
+                'can_manage_critics' => (bool) ($user?->canManageCritics()),
                 'status'       => $user?->status,
             ],
         ];

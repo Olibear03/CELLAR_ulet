@@ -7,7 +7,7 @@ import InputError from '@/Components/InputError';
 /**
  * AccountManagement — internal staff/assistant management.
  * Visible to: Director + Admin Assistant.
- * English Critics are managed separately on /critic-management (Director only).
+ * English Critics are managed separately on /critic-management.
  *
  * Director can:  create, approve, deactivate, reset password, hard-delete, transfer ownership
  * Assistant can: create, approve, deactivate, reset password (no delete, no transfer)
@@ -21,12 +21,23 @@ export default function AccountManagement({ users = [], logs = [] }) {
     const [createRole,       setCreateRole]        = useState('staff');
     const [resetTarget,      setResetTarget]       = useState(null);
     const [tempPassword,     setTempPassword]      = useState('');
+    const [permissionsTarget, setPermissionsTarget] = useState(null);
     const [transferTarget,   setTransferTarget]    = useState(null);
     const [transferPassword, setTransferPassword]  = useState('');
     const [transferError,    setTransferError]     = useState('');
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '', email: '', password: '', role: 'staff',
+    });
+    const {
+        data: permissionData,
+        setData: setPermissionData,
+        patch: patchPermissions,
+        processing: savingPermissions,
+        reset: resetPermissions,
+    } = useForm({
+        can_access_critic_reports: false,
+        can_manage_critics: false,
     });
 
     /* ── Create account ── */
@@ -51,6 +62,25 @@ export default function AccountManagement({ users = [], logs = [] }) {
         e.preventDefault();
         router.patch(route('security.users.reset-password', resetTarget), { password: tempPassword }, {
             onSuccess: () => { setResetTarget(null); setTempPassword(''); },
+        });
+    };
+
+    const openPermissions = (user) => {
+        setPermissionsTarget(user);
+        setPermissionData({
+            can_access_critic_reports: Boolean(user.can_access_critic_reports),
+            can_manage_critics: Boolean(user.can_manage_critics),
+        });
+    };
+
+    const submitPermissions = (e) => {
+        e.preventDefault();
+        patchPermissions(route('security.users.permissions', permissionsTarget.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setPermissionsTarget(null);
+                resetPermissions();
+            },
         });
     };
 
@@ -100,7 +130,7 @@ export default function AccountManagement({ users = [], logs = [] }) {
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">
                             Manage internal staff and assistant accounts.
-                            {isDirector && (
+                            {(isDirector || auth.can_manage_critics) && (
                                 <> English Critics are managed on the{' '}
                                     <a href={route('critic.management')} className="text-blue-600 font-semibold hover:underline">
                                         Critic Management
@@ -218,6 +248,13 @@ export default function AccountManagement({ users = [], logs = [] }) {
                                                         </button>
                                                     </Dropdown.Trigger>
                                                     <Dropdown.Content align="right" width="52">
+                                                        {isDirector && u.is_assistant && (
+                                                            <button onClick={() => openPermissions(u)}
+                                                                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-indigo-700 hover:bg-indigo-50">
+                                                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                                Manage Permissions
+                                                            </button>
+                                                        )}
                                                         {/* Approve — if pending */}
                                                         {u.status === 'pending' && (
                                                             <button onClick={() => handleApprove(u.id)}
@@ -339,6 +376,54 @@ export default function AccountManagement({ users = [], logs = [] }) {
                                     className="px-5 py-2 text-sm font-semibold text-gray-700">Cancel</button>
                                 <button type="submit"
                                     className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Assistant Permissions Modal ── */}
+            {permissionsTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div role="dialog" aria-modal="true" aria-labelledby="assistant-permissions-title"
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-7">
+                        <div className="flex justify-between items-start gap-4 mb-5">
+                            <div>
+                                <h3 id="assistant-permissions-title" className="text-lg font-bold text-gray-900">Assistant Permissions</h3>
+                                <p className="text-sm text-gray-500 mt-1">Choose what {permissionsTarget.name} can access.</p>
+                            </div>
+                            <button type="button" onClick={() => setPermissionsTarget(null)}
+                                aria-label="Close permissions"
+                                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <form onSubmit={submitPermissions} className="space-y-3">
+                            <label className="flex items-start gap-3 rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" checked={permissionData.can_access_critic_reports}
+                                    onChange={e => setPermissionData('can_access_critic_reports', e.target.checked)}
+                                    className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                <span>
+                                    <span className="block text-sm font-semibold text-gray-900">EC Billing Report</span>
+                                    <span className="block text-xs text-gray-500 mt-0.5">View English Critic billing reports and update payment status.</span>
+                                </span>
+                            </label>
+                            <label className="flex items-start gap-3 rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" checked={permissionData.can_manage_critics}
+                                    onChange={e => setPermissionData('can_manage_critics', e.target.checked)}
+                                    className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                <span>
+                                    <span className="block text-sm font-semibold text-gray-900">Critic Management</span>
+                                    <span className="block text-xs text-gray-500 mt-0.5">Review, activate, deactivate, and manage English Critic accounts.</span>
+                                </span>
+                            </label>
+                            <div className="flex justify-end gap-3 pt-3">
+                                <button type="button" onClick={() => setPermissionsTarget(null)}
+                                    className="px-5 py-2 text-sm font-semibold text-gray-700">Cancel</button>
+                                <button type="submit" disabled={savingPermissions}
+                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50">
+                                    {savingPermissions ? 'Saving…' : 'Save Permissions'}
+                                </button>
                             </div>
                         </form>
                     </div>

@@ -10,6 +10,8 @@ export default function AuthenticatedLayout({ children }) {
     const isAssistant = auth.is_assistant;
     const isStaff = auth.is_staff;
     const isCritic = auth.is_critic;
+    const canAccessCriticReports = auth.can_access_critic_reports;
+    const canManageCritics = auth.can_manage_critics;
 
     // Active Role state (Persisted in localStorage for Directors)
     const [activeRole, setActiveRole] = useState(() => {
@@ -183,7 +185,7 @@ export default function AuthenticatedLayout({ children }) {
                                 </Link>
 
 
-                                {isDirector && (
+                                {(isDirector || canAccessCriticReports) && (
                                     <Link href={route('critic.reports.index')} className={navItemClass(route().current('critic.reports.index'))}>
                                         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -229,8 +231,8 @@ export default function AuthenticatedLayout({ children }) {
                                     {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Account Management</span>}
                                 </Link>
 
-                                {/* Director-exclusive links */}
-                                {isDirector && (
+                                {/* Director and explicitly permissioned assistant links */}
+                                {(isDirector || canManageCritics) && (
                                     <>
                                         {/* English Critic Management */}
                                         <Link href={route('critic.management')} className={navItemClass(route().current('critic.management'))}>

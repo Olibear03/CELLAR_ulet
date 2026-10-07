@@ -46,7 +46,7 @@ Route::post('/register/critic', [CriticRegisterController::class, 'store'])
     ->name('critic.register.store');
 
 Route::get('/critic-management', function () {
-    abort_unless(auth()->user()->is_director, 403);
+    abort_unless(auth()->user()->canManageCritics(), 403);
 
     $critics = \App\Models\User::where('is_critic', true)
         ->withCount('criticSummaryReports')
@@ -56,20 +56,59 @@ Route::get('/critic-management', function () {
     return Inertia::render('CriticManagement', ['critics' => $critics]);
 })->middleware(['auth', 'verified'])->name('critic.management');
 
+Route::post('/critic-management', function (\Illuminate\Http\Request $request) {
+    abort_unless($request->user()->is_director, 403);
+
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'college' => 'required|string|max:100',
+        'email' => [
+            'required',
+            'string',
+            'lowercase',
+            'email',
+            'max:255',
+            'unique:users,email',
+            function ($attribute, $value, $fail) {
+                if (! str_ends_with(strtolower($value), '@cvsu.edu.ph')) {
+                    $fail('Only @cvsu.edu.ph email addresses are permitted for critic accounts.');
+                }
+            },
+        ],
+        'password' => 'required|string|min:8',
+    ]);
+
+    $critic = \App\Models\User::create([
+        ...$validated,
+        'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+        'is_critic' => true,
+        'status' => 'active',
+    ]);
+
+    \App\Models\ActivityLog::create([
+        'user_id' => $request->user()->id,
+        'action' => 'created_critic_account',
+        'type' => 'auth',
+        'location' => 'System',
+    ]);
+
+    return redirect()->back()->with('success', "{$critic->name} was registered as an active English Critic.");
+})->middleware(['auth', 'verified'])->name('critic.management.store');
+
 Route::patch('/critic-management/{id}/approve', function ($id) {
-    abort_unless(auth()->user()->is_director, 403);
+    abort_unless(auth()->user()->canManageCritics(), 403);
     \App\Models\User::where('is_critic', true)->findOrFail($id)->update(['status' => 'active']);
     return redirect()->back()->with('success', 'Critic approved.');
 })->middleware(['auth', 'verified'])->name('critic.management.approve');
 
 Route::patch('/critic-management/{id}/deactivate', function ($id) {
-    abort_unless(auth()->user()->is_director, 403);
+    abort_unless(auth()->user()->canManageCritics(), 403);
     \App\Models\User::where('is_critic', true)->findOrFail($id)->update(['status' => 'deactivated']);
     return redirect()->back()->with('success', 'Critic deactivated.');
 })->middleware(['auth', 'verified'])->name('critic.management.deactivate');
 
 Route::patch('/critic-management/{id}/reset-password', function (\Illuminate\Http\Request $request, $id) {
-    abort_unless(auth()->user()->is_director, 403);
+    abort_unless(auth()->user()->canManageCritics(), 403);
     $request->validate(['password' => 'required|string|min:8']);
     \App\Models\User::where('is_critic', true)->findOrFail($id)
         ->update(['password' => \Illuminate\Support\Facades\Hash::make($request->password)]);
@@ -77,7 +116,7 @@ Route::patch('/critic-management/{id}/reset-password', function (\Illuminate\Htt
 })->middleware(['auth', 'verified'])->name('critic.management.reset-password');
 
 Route::delete('/critic-management/{id}', function ($id) {
-    abort_unless(auth()->user()->is_director, 403);
+    abort_unless(auth()->user()->canManageCritics(), 403);
     $critic = \App\Models\User::where('is_critic', true)->findOrFail($id);
     abort_if($critic->id === auth()->id(), 403, 'You cannot delete your own account.');
     $critic->delete();
@@ -512,6 +551,27 @@ Route::post('/security/users', function (\Illuminate\Http\Request $request) {
 
     return redirect()->back()->with('success', 'Assistant created.');
 })->middleware(['auth', 'verified'])->name('security.users.store');
+
+Route::patch('/security/users/{id}/permissions', function (\Illuminate\Http\Request $request, $id) {
+    abort_unless($request->user()->is_director, 403);
+
+    $target = \App\Models\User::where('is_assistant', true)->findOrFail($id);
+    $validated = $request->validate([
+        'can_access_critic_reports' => 'required|boolean',
+        'can_manage_critics' => 'required|boolean',
+    ]);
+
+    $target->update($validated);
+
+    \App\Models\ActivityLog::create([
+        'user_id' => $request->user()->id,
+        'action' => 'updated_assistant_permissions',
+        'type' => 'auth',
+        'location' => 'System',
+    ]);
+
+    return redirect()->back()->with('success', "Permissions updated for {$target->name}.");
+})->middleware(['auth', 'verified'])->name('security.users.permissions');
 
 // Promote an admin_assistant to admin (director only)
 Route::patch('/security/users/{id}/promote', function (\Illuminate\Http\Request $request, $id) {

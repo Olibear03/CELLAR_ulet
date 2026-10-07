@@ -21,6 +21,8 @@ class User extends Authenticatable
         'is_assistant',
         'is_staff',
         'is_critic',
+        'can_access_critic_reports',
+        'can_manage_critics',
         'college',
         'professional_title',
         'department',
@@ -45,6 +47,8 @@ class User extends Authenticatable
             'is_assistant'      => 'boolean',
             'is_staff'          => 'boolean',
             'is_critic'         => 'boolean',
+            'can_access_critic_reports' => 'boolean',
+            'can_manage_critics'        => 'boolean',
             'office_hours'      => 'array',
             'max_queue_limit'   => 'integer',
         ];
@@ -79,6 +83,16 @@ class User extends Authenticatable
     public function canManageAccounts(): bool
     {
         return $this->is_director || $this->is_assistant;
+    }
+
+    public function canAccessCriticReports(): bool
+    {
+        return $this->is_director || ($this->is_assistant && $this->can_access_critic_reports);
+    }
+
+    public function canManageCritics(): bool
+    {
+        return $this->is_director || ($this->is_assistant && $this->can_manage_critics);
     }
 
     public function criticSummaryReports(): HasMany

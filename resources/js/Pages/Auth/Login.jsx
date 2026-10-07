@@ -13,8 +13,11 @@ export default function Login({ status, canResetPassword, portal = 'operator' })
     const portalDescription = isEvaluator
         ? 'English Critics only. New accounts require Director approval.'
         : 'Sign in with your CELLAR operator account.';
-    const operatorRoles = ['Director', 'Admin Assistant', 'Staff'];
-    const [selectedRole, setSelectedRole] = useState(2); // Default to Staff as shown in design or 0
+    const operatorRoles = [
+        { label: 'Director', value: 'director' },
+        { label: 'Admin Assistant', value: 'assistant' },
+        { label: 'Staff', value: 'staff' },
+    ];
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -22,6 +25,7 @@ export default function Login({ status, canResetPassword, portal = 'operator' })
         password: '',
         remember: false,
         portal,
+        operator_role: 'staff',
     });
 
     const submit = (e) => {
@@ -64,24 +68,25 @@ export default function Login({ status, canResetPassword, portal = 'operator' })
                         <span
                             aria-hidden="true"
                             className="absolute top-1 bottom-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-blue-800 shadow-sm transition-transform duration-300 ease-out"
-                            style={{ transform: `translateX(${selectedRole * 100}%)` }}
+                            style={{ transform: `translateX(${operatorRoles.findIndex((role) => role.value === data.operator_role) * 100}%)` }}
                         />
                         {operatorRoles.map((role, index) => (
                             <button
-                                key={role}
+                                key={role.value}
                                 type="button"
-                                aria-pressed={selectedRole === index}
-                                onClick={() => setSelectedRole(index)}
+                                aria-pressed={data.operator_role === role.value}
+                                onClick={() => setData('operator_role', role.value)}
                                 className={`relative z-10 rounded-full py-2 text-xs sm:text-sm transition-colors duration-200 ${
-                                    selectedRole === index
+                                    data.operator_role === role.value
                                         ? 'text-white font-bold'
                                         : 'text-blue-900 font-medium hover:text-blue-700'
                                 }`}
                             >
-                                {role}
+                                {role.label}
                             </button>
                         ))}
                     </div>
+                    <InputError message={errors.operator_role} className="mt-2 text-center" />
                     <p className="mt-2 text-center text-[11px] text-stone-500">
                         Access is based on the permissions assigned to your account.
                     </p>
