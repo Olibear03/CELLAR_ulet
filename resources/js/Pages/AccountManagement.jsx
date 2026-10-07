@@ -18,7 +18,6 @@ export default function AccountManagement({ users = [], logs = [] }) {
     const isAssistant = auth.is_assistant;
 
     const [createOpen,       setCreateOpen]       = useState(false);
-    const [createRole,       setCreateRole]        = useState('staff');
     const [resetTarget,      setResetTarget]       = useState(null);
     const [tempPassword,     setTempPassword]      = useState('');
     const [permissionsTarget, setPermissionsTarget] = useState(null);
@@ -41,7 +40,7 @@ export default function AccountManagement({ users = [], logs = [] }) {
     });
 
     /* ── Create account ── */
-    const openCreate = (role) => { setCreateRole(role); setData('role', role); setCreateOpen(true); };
+    const openCreate = (role) => { setData('role', role); setCreateOpen(true); };
     const submitCreate = (e) => {
         e.preventDefault();
         post(route('security.users.store'), {
@@ -340,7 +339,7 @@ export default function AccountManagement({ users = [], logs = [] }) {
                                 <input type="password" value={data.password} onChange={e => setData('password', e.target.value)} className={inputCls} required minLength={8} />
                                 <InputError message={errors.password} className="mt-1" />
                             </div>
-                            <input type="hidden" value={data.role} />
+                            <input type="hidden" name="role" value={data.role} />
                             <div className="flex justify-end gap-3 pt-2">
                                 <button type="button" onClick={() => { reset(); setCreateOpen(false); }}
                                     className="px-5 py-2 text-sm font-semibold text-gray-700 hover:text-gray-900">Cancel</button>

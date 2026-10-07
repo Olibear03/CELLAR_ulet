@@ -104,6 +104,16 @@ class AssistantFeaturePermissionsTest extends TestCase
         $this->assertSame($assistant->id, $report->fresh()->paid_by);
     }
 
+    public function test_director_using_the_critic_role_can_open_the_shared_billing_report(): void
+    {
+        $directorCritic = User::factory()->director()->create(['is_critic' => true]);
+
+        $this->actingAs($directorCritic)
+            ->get(route('critic.reports.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('CriticSummaryReports'));
+    }
+
     public function test_only_directors_can_register_critics_and_cvsu_email_is_required(): void
     {
         $assistant = User::factory()->assistant()->create();

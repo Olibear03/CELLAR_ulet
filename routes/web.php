@@ -528,28 +528,37 @@ Route::get('/security', function () {
 Route::post('/security/users', function (\Illuminate\Http\Request $request) {
     abort_unless($request->user()->is_director || $request->user()->is_assistant, 403);
 
-    $request->validate([
+    $validated = $request->validate([
         'name' => 'required|string|max:255',
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8',
+        'role' => 'required|in:staff,assistant',
     ]);
 
+    abort_unless(
+        $validated['role'] === 'staff' || $request->user()->is_director,
+        403,
+        'Only the director can create an Admin Assistant account.'
+    );
+
     $newUser = \App\Models\User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-        'is_assistant' => true,
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+        'is_assistant' => $validated['role'] === 'assistant',
+        'is_staff' => $validated['role'] === 'staff',
         'status' => 'active',
     ]);
 
     \App\Models\ActivityLog::create([
         'user_id' => $request->user()->id,
-        'action' => 'created_account',
+        'action' => $validated['role'] === 'assistant' ? 'created_assistant_account' : 'created_staff_account',
         'type' => 'auth',
         'location' => 'System'
     ]);
 
-    return redirect()->back()->with('success', 'Assistant created.');
+    $roleLabel = $validated['role'] === 'assistant' ? 'Admin Assistant' : 'Staff';
+    return redirect()->back()->with('success', "{$roleLabel} account created.");
 })->middleware(['auth', 'verified'])->name('security.users.store');
 
 Route::patch('/security/users/{id}/permissions', function (\Illuminate\Http\Request $request, $id) {

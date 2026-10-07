@@ -165,7 +165,7 @@ export default function CriticDashboard({
                     <div id="billing-reports" className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                         <div id="earnings" className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900">EC Billing Reports</h2>
+                                <h2 className="text-lg font-bold text-gray-900">My Recent Certifications</h2>
                                 <p className="mt-0.5 text-sm text-gray-500">Your latest certification earnings</p>
                             </div>
                             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{recentEarnings.length} records</span>
