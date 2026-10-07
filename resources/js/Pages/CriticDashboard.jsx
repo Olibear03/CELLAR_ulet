@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const formatCurrency = (amount) =>
@@ -165,8 +165,8 @@ export default function CriticDashboard({
                     <div id="billing-reports" className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                         <div id="earnings" className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900">My Recent Certifications</h2>
-                                <p className="mt-0.5 text-sm text-gray-500">Your latest certification earnings</p>
+                                <h2 className="text-lg font-bold text-gray-900">My Recent Billing Records</h2>
+                                <p className="mt-0.5 text-sm text-gray-500">Your latest English Critic billing entries</p>
                             </div>
                             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{recentEarnings.length} records</span>
                         </div>
@@ -188,11 +188,6 @@ export default function CriticDashboard({
                         ) : (
                             <p className="px-5 py-8 text-center text-sm text-gray-500">Your billing records will appear here.</p>
                         )}
-                        <div className="border-t border-gray-100 px-5 py-3">
-                            <Link href={route('critic.report.create')} className="text-sm font-semibold text-blue-700 hover:text-blue-800">
-                                View certifications
-                            </Link>
-                        </div>
                     </div>
 
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -209,12 +204,6 @@ export default function CriticDashboard({
                                 Requests are not assigned to a critic in the current workflow. Accepted requests will be listed here once review tracking is available.
                             </p>
                         </div>
-                        <Link
-                            href={route('critic.report.create')}
-                            className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                        >
-                            Open My Certifications
-                        </Link>
                     </div>
                 </section>
             </div>

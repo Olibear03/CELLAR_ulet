@@ -22,14 +22,6 @@ Route::get('/public-critics', function () {
     return Inertia::render('PublicAccreditedCritics');
 })->name('public-critics');
 
-Route::get('/submit-report', [CriticReportController::class, 'create'])
-    ->middleware(['auth', 'verified'])
-    ->name('critic.report.create');
-
-Route::post('/submit-report', [CriticReportController::class, 'store'])
-    ->middleware(['auth', 'verified'])
-    ->name('critic.report.store');
-
 Route::get('/critic-reports', [CriticReportController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('critic.reports.index');
@@ -122,10 +114,6 @@ Route::delete('/critic-management/{id}', function ($id) {
     $critic->delete();
     return redirect()->back()->with('success', 'Critic deleted.');
 })->middleware(['auth', 'verified'])->name('critic.management.destroy');
-
-Route::get('/official-receipt', function () {
-    return Inertia::render('OfficialReceipt');
-})->middleware(['auth', 'verified'])->name('critic.receipt.create');
 
 // ── Public Client Request Form (no login required) ──────────────────────────
 Route::get('/request', function () {

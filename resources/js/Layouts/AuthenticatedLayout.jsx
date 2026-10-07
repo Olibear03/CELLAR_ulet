@@ -26,13 +26,21 @@ export default function AuthenticatedLayout({ children }) {
         if (isDirector) {
             localStorage.setItem('cellar_active_role', newRole);
             if (newRole === 'English Critic') {
-                if (!route().current('critic.report.create') && !route().current('critic.receipt.create')) {
-                    router.visit(route('critic.report.create'));
+                if (
+                    !route().current('critic.dashboard') &&
+                    !route().current('critic.requests') &&
+                    !route().current('critic.earnings') &&
+                    !route().current('critic.reports.index')
+                ) {
+                    router.visit(route('critic.dashboard'));
                 }
-            } else if (newRole === 'Director') {
-                if (route().current('critic.report.create') || route().current('critic.receipt.create')) {
-                    router.visit(route('dashboard'));
-                }
+            } else if (
+                route().current('critic.dashboard') ||
+                route().current('critic.requests') ||
+                route().current('critic.earnings') ||
+                route().current('critic.reports.index')
+            ) {
+                router.visit(route('dashboard'));
             }
         }
     };
@@ -120,26 +128,6 @@ export default function AuthenticatedLayout({ children }) {
                                     </svg>
                                     {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">EC Billing Reports</span>}
                                 </Link>
-                            </nav>
-
-                            <SectionLabel label="My Work" />
-                            <nav className="space-y-1 flex flex-col items-center px-3">
-                                <Link href={route('critic.report.create')} className={navItemClass(route().current('critic.report.create'))}>
-                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">My Certifications</span>}
-                                </Link>
-
-                                <Link href={route('critic.receipt.create')} className={navItemClass(route().current('critic.receipt.create'))}>
-                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                            d="M16 4h4a2 2 0 012 2v14a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2h4m8 0v4M8 4v4m0 8h8m-8 4h8" />
-                                    </svg>
-                                    {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Official Receipt</span>}
-                                </Link>
-
                             </nav>
                             <SectionLabel label="Account" />
                             <nav className="space-y-1 flex flex-col items-center px-3">

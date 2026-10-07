@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 const formatCurrency = (amount) =>
@@ -249,11 +249,6 @@ export default function CriticEarnings({ reports = [] }) {
                     </div>
                 </section>
 
-                <div className="text-sm">
-                    <Link href={route('critic.report.create')} className="font-semibold text-blue-700 hover:text-blue-800">
-                        Go to My Certifications
-                    </Link>
-                </div>
             </div>
         </AuthenticatedLayout>
     );

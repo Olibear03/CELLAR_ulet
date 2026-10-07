@@ -38,6 +38,21 @@ class CriticEarningsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_critic_certification_and_official_receipt_pages_are_removed(): void
+    {
+        $critic = User::factory()->critic()->create(['status' => 'active']);
+
+        $this->actingAs($critic)
+            ->get('/submit-report')
+            ->assertNotFound();
+
+        $this->get('/official-receipt')->assertNotFound();
+
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('critic.report.create'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('critic.report.store'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('critic.receipt.create'));
+    }
+
     public function test_director_can_update_disbursement_status_and_audit_fields(): void
     {
         $director = User::factory()->director()->create();
@@ -70,30 +85,6 @@ class CriticEarningsTest extends TestCase
         $this->actingAs($critic)
             ->patch(route('critic.reports.payment-status', $report), ['payment_status' => 'paid'])
             ->assertForbidden();
-    }
-
-    public function test_new_certification_records_start_as_pending_disbursement(): void
-    {
-        $critic = User::factory()->critic()->create(['status' => 'active']);
-
-        $this->actingAs($critic)
-            ->post(route('critic.report.store'), [
-                'student_name' => 'Juan Dela Cruz',
-                'course_degree' => 'BA English',
-                'manuscript_title' => 'Research Paper',
-                'document_type' => 'thesis',
-                'times_read' => 2,
-                'page_count' => 180,
-                'total_amount' => 840,
-                'or_number' => 'OR-2026-0001',
-            ])
-            ->assertSessionHasNoErrors();
-
-        $this->assertDatabaseHas('critic_summary_reports', [
-            'user_id' => $critic->id,
-            'or_number' => 'OR-2026-0001',
-            'payment_status' => 'pending',
-        ]);
     }
 
     private function createReport(User $critic, array $overrides = []): CriticSummaryReport
