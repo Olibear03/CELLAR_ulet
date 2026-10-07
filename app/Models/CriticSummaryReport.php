@@ -17,6 +17,9 @@ class CriticSummaryReport extends Model
         'page_count',
         'total_amount',
         'or_number',
+        'payment_status',
+        'paid_at',
+        'paid_by',
     ];
 
     protected function casts(): array
@@ -25,6 +28,7 @@ class CriticSummaryReport extends Model
             'times_read'   => 'integer',
             'page_count'   => 'integer',
             'total_amount' => 'decimal:2',
+            'paid_at'      => 'datetime',
         ];
     }
 

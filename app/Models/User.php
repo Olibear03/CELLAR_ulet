@@ -22,6 +22,12 @@ class User extends Authenticatable
         'is_staff',
         'is_critic',
         'college',
+        'professional_title',
+        'department',
+        'office_location',
+        'availability_status',
+        'office_hours',
+        'max_queue_limit',
         'status',
     ];
 
@@ -39,6 +45,8 @@ class User extends Authenticatable
             'is_assistant'      => 'boolean',
             'is_staff'          => 'boolean',
             'is_critic'         => 'boolean',
+            'office_hours'      => 'array',
+            'max_queue_limit'   => 'integer',
         ];
     }
 

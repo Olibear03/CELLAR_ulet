@@ -74,7 +74,7 @@ export default function CriticDashboard({
         <AuthenticatedLayout>
             <Head title="Dashboard" />
 
-            <div className="mx-auto max-w-[1200px] space-y-6">
+            <div className="mx-auto max-w-300 space-y-6">
                 <div>
                     <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Dashboard</h1>
                     <p className="mt-1 text-sm text-gray-500">Welcome back, {auth.user.name}</p>
@@ -101,7 +101,7 @@ export default function CriticDashboard({
 
                     {pendingRequests.length > 0 ? (
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[720px] text-left text-sm">
+                            <table className="w-full min-w-180 text-left text-sm">
                                 <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
                                     <tr>
                                         <th className="px-5 py-3">Client</th>

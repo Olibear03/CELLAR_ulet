@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import CriticRequestModal from '@/Components/CriticRequestModal';
 
 const CRITICS_DATA = [
     {
@@ -215,6 +216,7 @@ export default function PublicAccreditedCritics() {
             <footer className="text-center text-slate-400 text-[10px] py-6 border-t border-slate-200/60 bg-white font-bold tracking-widest uppercase mt-8 print:hidden">
                 © {new Date().getFullYear()} CENTER FOR LANGUAGE-LEARNING AND RESEARCH OF CAVITE STATE UNIVERSITY
             </footer>
+            <CriticRequestModal colleges={CRITICS_DATA} />
         </div>
     );
 }

@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\CriticReportController;
+use App\Http\Controllers\CriticProfileScheduleController;
+use App\Http\Controllers\CriticEarningsController;
+use App\Http\Controllers\CriticQueueController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ArchiveFileController;
 use App\Http\Controllers\CategoryController;
@@ -30,6 +33,9 @@ Route::post('/submit-report', [CriticReportController::class, 'store'])
 Route::get('/critic-reports', [CriticReportController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('critic.reports.index');
+Route::patch('/critic-reports/{report}/payment-status', [CriticReportController::class, 'updatePaymentStatus'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.reports.payment-status');
 
 Route::get('/register/critic', [CriticRegisterController::class, 'create'])
     ->middleware('guest')
@@ -72,7 +78,9 @@ Route::patch('/critic-management/{id}/reset-password', function (\Illuminate\Htt
 
 Route::delete('/critic-management/{id}', function ($id) {
     abort_unless(auth()->user()->is_director, 403);
-    \App\Models\User::where('is_critic', true)->findOrFail($id)->delete();
+    $critic = \App\Models\User::where('is_critic', true)->findOrFail($id);
+    abort_if($critic->id === auth()->id(), 403, 'You cannot delete your own account.');
+    $critic->delete();
     return redirect()->back()->with('success', 'Critic deleted.');
 })->middleware(['auth', 'verified'])->name('critic.management.destroy');
 
@@ -154,6 +162,19 @@ Route::get('/critic-dashboard', function () {
         'recentEarnings' => $reports->take(5)->values(),
     ]);
 })->middleware(['auth', 'verified'])->name('critic.dashboard');
+
+Route::get('/critic-profile-schedule', [CriticProfileScheduleController::class, 'edit'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.profile-schedule.edit');
+Route::put('/critic-profile-schedule', [CriticProfileScheduleController::class, 'update'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.profile-schedule.update');
+Route::get('/critic-earnings', [CriticEarningsController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.earnings');
+Route::get('/critic-requests', [CriticQueueController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.requests');
 
 Route::get('/dashboard', function () {
     $userId = auth()->id();
@@ -267,8 +288,15 @@ Route::get('/documents/{path?}', function (\Illuminate\Http\Request $request, $p
         $query->whereNull('folder_id');
     }
 
+    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+    $files = $query->get()->each(function ($file) use ($disk) {
+        $file->file_size = ($file->metadata['type'] ?? null) === 'folder' || !$disk->exists($file->file_path)
+            ? null
+            : $disk->size($file->file_path);
+    });
+
     return Inertia::render('Documents', [
-        'files'         => $query->get(),
+        'files'         => $files,
         'categories'    => \App\Models\Category::all(),
         'currentFolder' => $currentFolder,
         'breadcrumbs'   => $breadcrumbs,

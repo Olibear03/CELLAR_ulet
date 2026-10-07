@@ -33,6 +33,9 @@ export default function Documents({ files = [], categories = [], currentFolder =
     const [searchQuery, setSearchQuery] = useState('');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [advancedFilters, setAdvancedFilters] = useState({ year: '', rating_period: '', author: '' });
+    const [sortBy, setSortBy] = useState('name');
+    const [sortDirection, setSortDirection] = useState('asc');
+    const [groupBy, setGroupBy] = useState('');
 
     const dropdownRef = useRef(null);
     const defaultCategory = categories.find(c => c.name === 'general_doc')?.id || '';
@@ -63,6 +66,76 @@ export default function Documents({ files = [], categories = [], currentFolder =
 
         return matchesSearch && matchesYear && matchesPeriod && matchesAuthor;
     });
+
+    const getSortValue = (file, field) => {
+        switch (field) {
+            case 'type':
+                if (file.metadata?.type === 'folder') return 'Folder';
+                return file.original_filename?.match(/\.([^.]+)$/)?.[1]?.toLowerCase() || 'File';
+            case 'size':
+                return file.file_size;
+            case 'date_created':
+                return file.created_at ? new Date(file.created_at).getTime() : null;
+            case 'date_modified':
+                return file.updated_at ? new Date(file.updated_at).getTime() : null;
+            case 'authors':
+                return file.user?.name;
+            case 'categories':
+                return file.category?.name;
+            case 'tags':
+                return file.metadata?.keywords;
+            case 'name':
+            case 'title':
+            default:
+                return file.title;
+        }
+    };
+
+    const sortedFiles = [...filteredFiles].sort((left, right) => {
+        const leftValue = getSortValue(left, sortBy);
+        const rightValue = getSortValue(right, sortBy);
+        const leftMissing = leftValue === null || leftValue === undefined || leftValue === '';
+        const rightMissing = rightValue === null || rightValue === undefined || rightValue === '';
+
+        if (leftMissing || rightMissing) {
+            return leftMissing === rightMissing ? 0 : leftMissing ? 1 : -1;
+        }
+
+        const comparison = typeof leftValue === 'number' && typeof rightValue === 'number'
+            ? leftValue - rightValue
+            : String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true, sensitivity: 'base' });
+
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    const groupedFiles = groupBy
+        ? sortedFiles.reduce((groups, file) => {
+            let label;
+            switch (groupBy) {
+                case 'type':
+                    label = getSortValue(file, 'type');
+                    break;
+                case 'authors':
+                    label = file.user?.name || 'Unknown author';
+                    break;
+                case 'categories':
+                    label = file.category?.name || 'Uncategorized';
+                    break;
+                case 'tags':
+                    label = file.metadata?.keywords || 'No tags';
+                    break;
+                default:
+                    label = '';
+            }
+            const group = groups.find((item) => item.label === label);
+            if (group) {
+                group.files.push(file);
+            } else {
+                groups.push({ label, files: [file] });
+            }
+            return groups;
+        }, [])
+        : [{ label: '', files: sortedFiles }];
 
     const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
 
@@ -335,7 +408,50 @@ export default function Documents({ files = [], categories = [], currentFolder =
 
                     {/* Advanced filter panel */}
                     {showAdvanced && (
-                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 grid grid-cols-3 gap-4">
+                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Sort by</label>
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="name">Name</option>
+                                    <option value="date_modified">Date modified</option>
+                                    <option value="type">Type</option>
+                                    <option value="size">Size</option>
+                                    <option value="date_created">Date created</option>
+                                    <option value="authors">Authors</option>
+                                    <option value="categories">Categories</option>
+                                    <option value="tags">Tags</option>
+                                    <option value="title">Title</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Order</label>
+                                <select
+                                    value={sortDirection}
+                                    onChange={(e) => setSortDirection(e.target.value)}
+                                    className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="asc">Ascending</option>
+                                    <option value="desc">Descending</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Group by</label>
+                                <select
+                                    value={groupBy}
+                                    onChange={(e) => setGroupBy(e.target.value)}
+                                    className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">No grouping</option>
+                                    <option value="type">Type</option>
+                                    <option value="authors">Authors</option>
+                                    <option value="categories">Categories</option>
+                                    <option value="tags">Tags</option>
+                                </select>
+                            </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Year</label>
                                 <select
@@ -441,7 +557,15 @@ export default function Documents({ files = [], categories = [], currentFolder =
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {filteredFiles.length > 0 ? (
-                                    filteredFiles.map((file) => {
+                                    groupedFiles.flatMap(({ label, files: groupItems }) => [
+                                        ...(label ? [(
+                                            <tr key={`group-${label}`} className="bg-gray-50">
+                                                <td colSpan="5" className="px-6 py-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+                                                    {label}
+                                                </td>
+                                            </tr>
+                                        )] : []),
+                                        ...groupItems.map((file) => {
                                         const isSelected = selectedIds.has(file.id);
                                         return (
                                         <tr
@@ -577,6 +701,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                             </td>
                                         </tr>
                                     ); })
+                                    ])
                                 ) : (
                                     <tr>
                                         <td colSpan="6" className="py-20 text-center">
@@ -596,7 +721,13 @@ export default function Documents({ files = [], categories = [], currentFolder =
                     /* -- Grid view — matches reference design -- */
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {filteredFiles.length > 0 ? (
-                            filteredFiles.map((file) => {
+                            groupedFiles.flatMap(({ label, files: groupItems }) => [
+                            ...(label ? [(
+                                <div key={`group-${label}`} className="col-span-full rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+                                    {label}
+                                </div>
+                            )] : []),
+                            ...groupItems.map((file) => {
                                 const isFolder   = file.metadata?.type === 'folder';
                                 const isSelected = selectedIds.has(file.id);
 
@@ -718,6 +849,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                                     </div>
                                 );
                             })
+                            ])
                         ) : (
                             <div className="col-span-full py-20 text-center text-gray-500 text-sm">
                                 {searchQuery ? 'No documents match your search.' : 'No documents yet.'}
@@ -782,4 +914,3 @@ export default function Documents({ files = [], categories = [], currentFolder =
         </AuthenticatedLayout>
     );
 }
-

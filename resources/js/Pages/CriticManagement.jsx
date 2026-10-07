@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import Dropdown from '@/Components/Dropdown';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 /**
  * CriticManagement — Director-only page for managing English Critic accounts.
@@ -8,9 +9,17 @@ import { useState } from 'react';
  * This page lets the Director approve, deactivate, reset passwords, and delete them.
  */
 export default function CriticManagement({ critics = [] }) {
-
     const [resetTarget,  setResetTarget]  = useState(null);
-    const [newPassword,  setNewPassword]  = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const { auth, flash } = usePage().props;
+    const {
+        data: resetData,
+        setData: setResetData,
+        patch: patchPassword,
+        processing: resettingPassword,
+        errors: resetErrors,
+        reset: clearPassword,
+    } = useForm({ password: '' });
 
     /* ── Actions ── */
     const handleApprove    = (id) => router.patch(route('critic.management.approve', id),    {}, { preserveScroll: true });
@@ -21,8 +30,9 @@ export default function CriticManagement({ critics = [] }) {
     };
     const submitReset = (e) => {
         e.preventDefault();
-        router.patch(route('critic.management.reset-password', resetTarget), { password: newPassword }, {
-            onSuccess: () => { setResetTarget(null); setNewPassword(''); },
+        patchPassword(route('critic.management.reset-password', resetTarget), {
+            preserveScroll: true,
+            onSuccess: () => { setResetTarget(null); clearPassword(); },
         });
     };
 
@@ -34,7 +44,14 @@ export default function CriticManagement({ critics = [] }) {
     };
 
     const pending     = critics.filter(c => c.status === 'pending');
+    const pageSize    = 8;
+    const pageCount   = Math.ceil(critics.length / pageSize);
+    const visibleCritics = critics.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const inputCls    = 'w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-colors outline-none';
+
+    useEffect(() => {
+        setCurrentPage((page) => Math.min(page, Math.max(pageCount, 1)));
+    }, [pageCount]);
 
     return (
         <AuthenticatedLayout>
@@ -57,6 +74,12 @@ export default function CriticManagement({ critics = [] }) {
                     </div>
                     <span className="text-xs font-semibold text-gray-400 self-end">{critics.length} critics total</span>
                 </div>
+
+                {flash?.success && (
+                    <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                        {flash.success}
+                    </div>
+                )}
 
                 {/* ── Pending Approvals ── */}
                 {pending.length > 0 && (
@@ -94,7 +117,7 @@ export default function CriticManagement({ critics = [] }) {
                 )}
 
                 {/* ── Critics table ── */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-visible">
                     <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -126,7 +149,7 @@ export default function CriticManagement({ critics = [] }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {critics.map(c => (
+                                {visibleCritics.map(c => (
                                     <tr key={c.id} className="hover:bg-gray-50/60 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -152,45 +175,81 @@ export default function CriticManagement({ critics = [] }) {
                                         </td>
 
                                         <td className="px-6 py-4 text-right">
-                                            {/* Action buttons */}
-                                            <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {c.status === 'pending' && (
-                                                    <button onClick={() => handleApprove(c.id)}
-                                                        className="p-1.5 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
-                                                        title="Approve">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            <Dropdown>
+                                                <Dropdown.Trigger>
+                                                    <button
+                                                        type="button"
+                                                        aria-label={`Actions for ${c.name}`}
+                                                        className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100"
+                                                    >
+                                                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                                                        </svg>
                                                     </button>
-                                                )}
-                                                {c.status === 'active' && (
-                                                    <button onClick={() => handleDeactivate(c.id)}
-                                                        className="p-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-700 transition-colors"
-                                                        title="Deactivate">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                </Dropdown.Trigger>
+                                                <Dropdown.Content
+                                                    width="48"
+                                                    contentClasses="rounded-xl bg-white py-1 shadow-lg ring-1 ring-gray-200"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => c.status === 'active' ? handleDeactivate(c.id) : handleApprove(c.id)}
+                                                        className={`flex w-full items-center px-4 py-2.5 text-left text-sm hover:bg-gray-50 ${
+                                                            c.status === 'active' ? 'text-amber-700' : 'text-green-700'
+                                                        }`}
+                                                    >
+                                                        {c.status === 'active' ? 'Deactivate User' : 'Activate User'}
                                                     </button>
-                                                )}
-                                                {c.status === 'deactivated' && (
-                                                    <button onClick={() => handleApprove(c.id)}
-                                                        className="p-1.5 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
-                                                        title="Re-activate">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { clearPassword(); setResetTarget(c.id); }}
+                                                        className="flex w-full items-center px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                                    >
+                                                        Reset Password
                                                     </button>
-                                                )}
-                                                <button onClick={() => { setResetTarget(c.id); setNewPassword(''); }}
-                                                    className="p-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
-                                                    title="Reset Password">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-                                                </button>
-                                                <button onClick={() => handleDelete(c.id)}
-                                                    className="p-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
-                                                    title="Hard Delete">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                </button>
-                                            </div>
+                                                    <div className="my-1 border-t border-gray-100" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDelete(c.id)}
+                                                        disabled={Number(auth.user.id) === Number(c.id)}
+                                                        title={Number(auth.user.id) === Number(c.id) ? 'You cannot delete your own account.' : undefined}
+                                                        className="flex w-full items-center px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-white"
+                                                    >
+                                                        Delete Account
+                                                    </button>
+                                                </Dropdown.Content>
+                                            </Dropdown>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
+                    )}
+                    {pageCount > 1 && (
+                        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-3">
+                            <p className="text-xs text-gray-500">
+                                Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, critics.length)} of {critics.length} accounts
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    Previous
+                                </button>
+                                <span className="text-xs font-medium text-gray-500">Page {currentPage} of {pageCount}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentPage((page) => Math.min(page + 1, pageCount))}
+                                    disabled={currentPage === pageCount}
+                                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
@@ -201,7 +260,7 @@ export default function CriticManagement({ critics = [] }) {
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-7">
                         <div className="flex justify-between items-center mb-5">
                             <h3 className="text-lg font-bold text-gray-900">Reset Critic Password</h3>
-                            <button onClick={() => setResetTarget(null)}
+                            <button type="button" onClick={() => { setResetTarget(null); clearPassword(); }}
                                 className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
@@ -211,16 +270,19 @@ export default function CriticManagement({ critics = [] }) {
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                                     New Password
                                 </label>
-                                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                                <input type="password" value={resetData.password} onChange={e => setResetData('password', e.target.value)}
                                     className={inputCls} autoFocus required minLength={8}
                                     placeholder="Minimum 8 characters" />
+                                {resetErrors.password && (
+                                    <p className="mt-1 text-sm text-red-600">{resetErrors.password}</p>
+                                )}
                             </div>
                             <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setResetTarget(null)}
+                                <button type="button" onClick={() => { setResetTarget(null); clearPassword(); }}
                                     className="px-5 py-2 text-sm font-semibold text-gray-700">Cancel</button>
-                                <button type="submit"
-                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg">
-                                    Reset
+                                <button type="submit" disabled={resettingPassword}
+                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-60">
+                                    {resettingPassword ? 'Resetting…' : 'Reset Password'}
                                 </button>
                             </div>
                         </form>

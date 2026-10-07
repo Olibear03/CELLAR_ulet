@@ -28,22 +28,12 @@ class DatabaseSeeder extends Seeder
                 'password'    => Hash::make('director123'),
                 'is_director' => true,
                 'is_critic'   => true,
+                'college'     => 'CAS',
                 'status'      => 'active',
                 'email_verified_at' => now(),
             ]
         );
-
-        User::firstOrCreate(
-            ['email' => 'director@cellar.edu.ph'],
-            [
-                'name'        => 'CELLAR Director',
-                'password'    => Hash::make('password'),
-                'is_director' => true,
-                'is_critic'   => true,
-                'status'      => 'active',
-                'email_verified_at' => now(),
-            ]
-        );
+        User::where('email', 'director@cvsu.edu.ph')->update(['college' => 'CAS']);
 
         // Admin Assistant account
         User::firstOrCreate(

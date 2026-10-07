@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 
 const DOCUMENT_TYPES = {
@@ -13,371 +13,51 @@ const DOCUMENT_TYPES = {
     other:                      'Other',
 };
 
-// Wireframe-optimized list of critics
 const CRITICS_DATA = [
     {
         college: 'College of Agriculture, Food, Environment, and Natural Resources',
         code: 'CAFENR',
         color: 'bg-emerald-500/10 text-emerald-700 border-emerald-200/50',
-        list: ['Critic Dummy 3']
     },
     {
         college: 'College of Arts and Sciences',
         code: 'CAS',
         color: 'bg-purple-500/10 text-purple-700 border-purple-200/50',
-        list: ['Critic Dummy 1']
     },
     {
         college: 'College of Education',
         code: 'CED',
         color: 'bg-amber-500/10 text-amber-700 border-amber-200/50',
-        list: ['Critic Dummy 6']
     },
     {
         college: 'College of Engineering and Information Technology',
         code: 'CEIT',
         color: 'bg-blue-500/10 text-blue-700 border-blue-200/50',
-        list: ['Critic Dummy 2']
     },
     {
         college: 'College of Economics, Management, and Development Studies',
         code: 'CEMDS',
         color: 'bg-sky-500/10 text-sky-700 border-sky-200/50',
-        list: ['Critic Dummy 4']
     },
     {
         college: 'College of Nursing',
         code: 'CON',
         color: 'bg-rose-500/10 text-rose-700 border-rose-200/50',
-        list: ['Critic Dummy 5']
     },
     {
         college: 'College of Veterinary Medicine and Biomedical Sciences',
         code: 'CVMBS',
         color: 'bg-red-500/10 text-red-700 border-red-200/50',
-        list: ['Critic Dummy 7']
     }
 ];
 
-const getCriticCollege = (criticName) => {
-    if (!criticName) return null;
-    const name = criticName.trim();
-    switch (name) {
-        case 'Critic Dummy 1':
-            return { college: 'College of Arts and Sciences', code: 'CAS', color: 'bg-purple-500/10 text-purple-700 border-purple-200/50' };
-        case 'Critic Dummy 2':
-            return { college: 'College of Engineering and Information Technology', code: 'CEIT', color: 'bg-blue-500/10 text-blue-700 border-blue-200/50' };
-        case 'Critic Dummy 3':
-            return { college: 'College of Agriculture, Food, Environment, and Natural Resources', code: 'CAFENR', color: 'bg-emerald-500/10 text-emerald-700 border-emerald-200/50' };
-        case 'Critic Dummy 4':
-            return { college: 'College of Economics, Management, and Development Studies', code: 'CEMDS', color: 'bg-sky-500/10 text-sky-700 border-sky-200/50' };
-        case 'Critic Dummy 5':
-            return { college: 'College of Nursing', code: 'CON', color: 'bg-rose-500/10 text-rose-700 border-rose-200/50' };
-        case 'Critic Dummy 6':
-            return { college: 'College of Education', code: 'CED', color: 'bg-amber-500/10 text-amber-700 border-amber-200/50' };
-        case 'Critic Dummy 7':
-            return { college: 'College of Veterinary Medicine and Biomedical Sciences', code: 'CVMBS', color: 'bg-red-500/10 text-red-700 border-red-200/50' };
-        default:
-            return null;
-    }
-};
+const getCriticCollege = (collegeCode) =>
+    CRITICS_DATA.find((college) => college.code === collegeCode) ?? null;
 
-const ALL_OFFICIAL_CRITICS = [
-    { name: 'Critic Dummy 1', collegeName: 'College of Arts and Sciences', collegeCode: 'CAS', color: 'bg-purple-500/10 text-purple-700 border-purple-200/50' },
-    { name: 'Critic Dummy 2', collegeName: 'College of Engineering and Information Technology', collegeCode: 'CEIT', color: 'bg-blue-500/10 text-blue-700 border-blue-200/50' },
-    { name: 'Critic Dummy 3', collegeName: 'College of Agriculture, Food, Environment, and Natural Resources', collegeCode: 'CAFENR', color: 'bg-emerald-500/10 text-emerald-700 border-emerald-200/50' },
-    { name: 'Critic Dummy 4', collegeName: 'College of Economics, Management, and Development Studies', collegeCode: 'CEMDS', color: 'bg-sky-500/10 text-sky-700 border-sky-200/50' },
-    { name: 'Critic Dummy 5', collegeName: 'College of Nursing', collegeCode: 'CON', color: 'bg-rose-500/10 text-rose-700 border-rose-200/50' },
-    { name: 'Critic Dummy 6', collegeName: 'College of Education', collegeCode: 'CED', color: 'bg-amber-500/10 text-amber-700 border-amber-200/50' },
-    { name: 'Critic Dummy 7', collegeName: 'College of Veterinary Medicine and Biomedical Sciences', collegeCode: 'CVMBS', color: 'bg-red-500/10 text-red-700 border-red-200/50' }
-];
-
-// 3 Fake submissions per critic (21 total mock items) all receiving O.R. numbers
-const MOCK_REPORTS = [
-    // Critic Dummy 1 (CAS)
-    {
-        id: 'mock-1',
-        user: { name: 'Critic Dummy 1' },
-        student_name: 'Juan dela Cruz',
-        course_degree: 'AB Journalism',
-        manuscript_title: 'An Analysis of Modern Digital Journalism in the Philippines',
-        document_type: 'thesis',
-        times_read: 2,
-        page_count: 110,
-        total_amount: 2200.00,
-        or_number: 'OR-2026-0001',
-        created_at: '2026-06-01T10:00:00.000Z'
-    },
-    {
-        id: 'mock-2',
-        user: { name: 'Critic Dummy 1' },
-        student_name: 'Maria Clara',
-        course_degree: 'AB English',
-        manuscript_title: 'Syntactic Structures and Stylistics in Local Literature',
-        document_type: 'thesis',
-        times_read: 3,
-        page_count: 145,
-        total_amount: 4350.00,
-        or_number: 'OR-2026-0002',
-        created_at: '2026-06-02T11:30:00.000Z'
-    },
-    {
-        id: 'mock-3',
-        user: { name: 'Critic Dummy 1' },
-        student_name: 'Crisostomo Ibarra',
-        course_degree: 'MA English',
-        manuscript_title: 'Socio-Political Discourse in Post-Colonial Philippine Novels',
-        document_type: 'dissertation',
-        times_read: 2,
-        page_count: 210,
-        total_amount: 8400.00,
-        or_number: 'OR-2026-0003',
-        created_at: '2026-06-03T14:15:00.000Z'
-    },
-    // Critic Dummy 2 (CEIT)
-    {
-        id: 'mock-4',
-        user: { name: 'Critic Dummy 2' },
-        student_name: 'Jose Rizal',
-        course_degree: 'BS Computer Science',
-        manuscript_title: 'Development of an AI-Driven Library Archival Management System',
-        document_type: 'capstone',
-        times_read: 2,
-        page_count: 180,
-        total_amount: 3600.00,
-        or_number: 'OR-2026-0004',
-        created_at: '2026-06-04T09:00:00.000Z'
-    },
-    {
-        id: 'mock-5',
-        user: { name: 'Critic Dummy 2' },
-        student_name: 'Andres Bonifacio',
-        course_degree: 'BS Information Technology',
-        manuscript_title: 'Cloud-Based Document Tracking and Analytics for Academic Research',
-        document_type: 'capstone',
-        times_read: 1,
-        page_count: 95,
-        total_amount: 1900.00,
-        or_number: 'OR-2026-0005',
-        created_at: '2026-06-04T15:20:00.000Z'
-    },
-    {
-        id: 'mock-6',
-        user: { name: 'Critic Dummy 2' },
-        student_name: 'Emilio Jacinto',
-        course_degree: 'BS Civil Engineering',
-        manuscript_title: 'Structural Integrity Assessment of Heritage Bridges in Cavite',
-        document_type: 'design_project',
-        times_read: 2,
-        page_count: 250,
-        total_amount: 5000.00,
-        or_number: 'OR-2026-0006',
-        created_at: '2026-06-05T10:45:00.000Z'
-    },
-    // Critic Dummy 3 (CAFENR)
-    {
-        id: 'mock-7',
-        user: { name: 'Critic Dummy 3' },
-        student_name: 'Gabriela Silang',
-        course_degree: 'BS Agriculture',
-        manuscript_title: 'Growth Performance and Yield of Organic Rice under Intercropping',
-        document_type: 'thesis',
-        times_read: 2,
-        page_count: 88,
-        total_amount: 1760.00,
-        or_number: 'OR-2026-0007',
-        created_at: '2026-06-01T08:30:00.000Z'
-    },
-    {
-        id: 'mock-8',
-        user: { name: 'Critic Dummy 3' },
-        student_name: 'Melchora Aquino',
-        course_degree: 'BS Food Technology',
-        manuscript_title: 'Physicochemical Properties and Shelf-life of Coconut-based Desserts',
-        document_type: 'thesis',
-        times_read: 3,
-        page_count: 115,
-        total_amount: 3450.00,
-        or_number: 'OR-2026-0008',
-        created_at: '2026-06-02T13:00:00.000Z'
-    },
-    {
-        id: 'mock-9',
-        user: { name: 'Critic Dummy 3' },
-        student_name: 'Gregoria de Jesus',
-        course_degree: 'MS Environmental Science',
-        manuscript_title: 'Biodiversity Assessment of Riparian Zones in Indang Watersheds',
-        document_type: 'dissertation',
-        times_read: 2,
-        page_count: 195,
-        total_amount: 7800.00,
-        or_number: 'OR-2026-0009',
-        created_at: '2026-06-03T16:40:00.000Z'
-    },
-    // Critic Dummy 4 (CEMDS)
-    {
-        id: 'mock-10',
-        user: { name: 'Critic Dummy 4' },
-        student_name: 'Apolinario Mabini',
-        course_degree: 'BS Business Administration',
-        manuscript_title: 'Market Viability and Consumer Response to E-Commerce Apps',
-        document_type: 'thesis',
-        times_read: 2,
-        page_count: 130,
-        total_amount: 2600.00,
-        or_number: 'OR-2026-0010',
-        created_at: '2026-06-01T11:00:00.000Z'
-    },
-    {
-        id: 'mock-11',
-        user: { name: 'Critic Dummy 4' },
-        student_name: 'Marcelo H. del Pilar',
-        course_degree: 'BS Economics',
-        manuscript_title: 'Economic Impact of Inflation on Local Agri-Producers in Cavite',
-        document_type: 'thesis',
-        times_read: 1,
-        page_count: 105,
-        total_amount: 2100.00,
-        or_number: 'OR-2026-0011',
-        created_at: '2026-06-02T09:15:00.000Z'
-    },
-    {
-        id: 'mock-12',
-        user: { name: 'Critic Dummy 4' },
-        student_name: 'Juan Luna',
-        course_degree: 'MBA',
-        manuscript_title: 'Strategic Management Practices of Cooperatives in Region IV-A',
-        document_type: 'dissertation',
-        times_read: 2,
-        page_count: 220,
-        total_amount: 8800.00,
-        or_number: 'OR-2026-0012',
-        created_at: '2026-06-03T15:00:00.000Z'
-    },
-    // Critic Dummy 5 (CON)
-    {
-        id: 'mock-13',
-        user: { name: 'Critic Dummy 5' },
-        student_name: 'Teresa Magbanua',
-        course_degree: 'BS Nursing',
-        manuscript_title: 'Health-Seeking Behaviors of Elderly Residents in Rural Cavite',
-        document_type: 'thesis',
-        times_read: 2,
-        page_count: 140,
-        total_amount: 2800.00,
-        or_number: 'OR-2026-0013',
-        created_at: '2026-06-01T14:30:00.000Z'
-    },
-    {
-        id: 'mock-14',
-        user: { name: 'Critic Dummy 5' },
-        student_name: 'Trinidad Tecson',
-        course_degree: 'BS Nursing',
-        manuscript_title: 'Stress Levels and Coping Mechanisms among Emergency Ward Nurses',
-        document_type: 'thesis',
-        times_read: 2,
-        page_count: 125,
-        total_amount: 2500.00,
-        or_number: 'OR-2026-0014',
-        created_at: '2026-06-02T16:00:00.000Z'
-    },
-    {
-        id: 'mock-15',
-        user: { name: 'Critic Dummy 5' },
-        student_name: 'Josefa Llanes Escoda',
-        course_degree: 'MS Nursing',
-        manuscript_title: 'Efficacy of Community-Based Preventive Health Seminars on Hygiene',
-        document_type: 'dissertation',
-        times_read: 3,
-        page_count: 190,
-        total_amount: 7600.00,
-        or_number: 'OR-2026-0015',
-        created_at: '2026-06-03T10:00:00.000Z'
-    },
-    // Critic Dummy 6 (CED)
-    {
-        id: 'mock-16',
-        user: { name: 'Critic Dummy 6' },
-        student_name: 'Francisco Baltazar',
-        course_degree: 'Bachelor of Secondary Education',
-        manuscript_title: 'Classroom Management Styles of Pre-Service Secondary Teachers',
-        document_type: 'student_teaching_portfolio',
-        times_read: 2,
-        page_count: 160,
-        total_amount: 3200.00,
-        or_number: 'OR-2026-0016',
-        created_at: '2026-06-01T15:45:00.000Z'
-    },
-    {
-        id: 'mock-17',
-        user: { name: 'Critic Dummy 6' },
-        student_name: 'Leona Florentino',
-        course_degree: 'Bachelor of Elementary Education',
-        manuscript_title: 'Development of Gamified Learning Modules for Early Mathematics',
-        document_type: 'thesis',
-        times_read: 2,
-        page_count: 112,
-        total_amount: 2240.00,
-        or_number: 'OR-2026-0017',
-        created_at: '2026-06-02T14:00:00.000Z'
-    },
-    {
-        id: 'mock-18',
-        user: { name: 'Critic Dummy 6' },
-        student_name: 'Jose Maria Panganiban',
-        course_degree: 'MA Education',
-        manuscript_title: 'Implementation of Blended Learning Modalities in Secondary Schools',
-        document_type: 'dissertation',
-        times_read: 2,
-        page_count: 240,
-        total_amount: 9600.00,
-        or_number: 'OR-2026-0018',
-        created_at: '2026-06-03T13:20:00.000Z'
-    },
-    // Critic Dummy 7 (CVMBS)
-    {
-        id: 'mock-19',
-        user: { name: 'Critic Dummy 7' },
-        student_name: 'Galicano Apacible',
-        course_degree: 'Doctor of Veterinary Medicine',
-        manuscript_title: 'Prevalence of Avian Influenza in Selected Farms in Cavite Province',
-        document_type: 'thesis',
-        times_read: 2,
-        page_count: 150,
-        total_amount: 3000.00,
-        or_number: 'OR-2026-0019',
-        created_at: '2026-06-01T16:15:00.000Z'
-    },
-    {
-        id: 'mock-20',
-        user: { name: 'Critic Dummy 7' },
-        student_name: 'Mariano Ponce',
-        course_degree: 'BS Biomedical Sciences',
-        manuscript_title: 'Antimicrobial Efficacy of Selected Herbal Extracts against S. aureus',
-        document_type: 'thesis',
-        times_read: 3,
-        page_count: 135,
-        total_amount: 4050.00,
-        or_number: 'OR-2026-0020',
-        created_at: '2026-06-02T10:30:00.000Z'
-    },
-    {
-        id: 'mock-21',
-        user: { name: 'Critic Dummy 7' },
-        student_name: 'Antonio Luna',
-        course_degree: 'MS Biology',
-        manuscript_title: 'Molecular Characterization of Microbial Communities in Organic Soil',
-        document_type: 'dissertation',
-        times_read: 2,
-        page_count: 205,
-        total_amount: 8200.00,
-        or_number: 'OR-2026-0021',
-        created_at: '2026-06-03T11:45:00.000Z'
-    }
-];
-
-export default function CriticSummaryReports({ reports = [] }) {
+export default function CriticSummaryReports({ reports = [], critics = [] }) {
     const [activeTab, setActiveTab] = useState('table'); // 'table' | 'directory' | 'analytics'
+    const [updatingPaymentId, setUpdatingPaymentId] = useState(null);
+    const { flash } = usePage().props;
     const [search, setSearch] = useState('');
     const [filterType, setFilterType] = useState('');
     const [selectedCollege, setSelectedCollege] = useState('ALL');
@@ -387,16 +67,23 @@ export default function CriticSummaryReports({ reports = [] }) {
     const [directorySearch, setDirectorySearch] = useState('');
     const [directoryCollege, setDirectoryCollege] = useState('ALL');
 
-    // Use strictly static mock reports for the wireframe
-    const combinedReports = useMemo(() => {
-        return MOCK_REPORTS;
-    }, []);
+    const combinedReports = reports;
+    const allOfficialCritics = useMemo(() => critics.map((critic) => {
+        const college = getCriticCollege(critic.college);
+        return {
+            name: critic.name,
+            collegeName: college?.college ?? 'Unspecified College',
+            collegeCode: critic.college ?? '',
+            color: college?.color ?? 'bg-gray-100 text-gray-700 border-gray-200',
+            status: critic.status,
+        };
+    }), [critics]);
 
     // Pre-calculate the college for every report's author
     const enrichedReports = useMemo(() => {
         return combinedReports.map(r => ({
             ...r,
-            college_info: getCriticCollege(r.user?.name)
+            college_info: getCriticCollege(r.user?.college)
         }));
     }, [combinedReports]);
 
@@ -423,12 +110,12 @@ export default function CriticSummaryReports({ reports = [] }) {
 
     // Directory list filtered
     const filteredCritics = useMemo(() => {
-        return ALL_OFFICIAL_CRITICS.filter(c => {
+        return allOfficialCritics.filter(c => {
             const matchesSearch = !directorySearch || c.name.toLowerCase().includes(directorySearch.toLowerCase());
             const matchesCollege = directoryCollege === 'ALL' || c.collegeCode === directoryCollege;
             return matchesSearch && matchesCollege;
         });
-    }, [directorySearch, directoryCollege]);
+    }, [allOfficialCritics, directorySearch, directoryCollege]);
 
     // Selected critic's submissions (Solo view)
     const criticSoloSubmissions = useMemo(() => {
@@ -622,6 +309,7 @@ export default function CriticSummaryReports({ reports = [] }) {
                     <nav className="flex space-x-6" aria-label="Tabs">
                         {[
                             { id: 'table', label: 'Summary List', icon: 'M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+                            { id: 'disbursements', label: 'Disbursements', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
                             { id: 'directory', label: 'Critics Directory', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
                             { id: 'analytics', label: 'Analytics Dashboard', icon: 'M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z' },
                         ].map(t => (
@@ -642,6 +330,88 @@ export default function CriticSummaryReports({ reports = [] }) {
                         ))}
                     </nav>
                 </div>
+
+                {flash?.success && (
+                    <div role="status" className="no-print rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                        {flash.success}
+                    </div>
+                )}
+
+                {activeTab === 'disbursements' && (
+                    <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                        <div className="border-b border-gray-100 px-5 py-4">
+                            <h2 className="text-lg font-bold text-gray-900">Critic Disbursements</h2>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Update payment records after a critic’s disbursement has been processed. Historical records without payment data are marked untracked.
+                            </p>
+                        </div>
+                        {reports.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[900px] text-left text-sm">
+                                    <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        <tr>
+                                            <th className="px-4 py-3">Critic</th>
+                                            <th className="px-4 py-3">Student</th>
+                                            <th className="px-4 py-3">Document Title</th>
+                                            <th className="px-4 py-3">Logged</th>
+                                            <th className="px-4 py-3 text-right">Fee</th>
+                                            <th className="px-4 py-3">Payment Status</th>
+                                            <th className="px-4 py-3 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {reports.map((report) => {
+                                            const isUpdating = updatingPaymentId === report.id;
+                                            const isPaid = report.payment_status === 'paid';
+                                            const isPending = report.payment_status === 'pending';
+
+                                            return (
+                                                <tr key={report.id} className="text-gray-700 hover:bg-gray-50/70">
+                                                    <td className="whitespace-nowrap px-4 py-3 font-semibold text-gray-900">{report.user?.name ?? '—'}</td>
+                                                    <td className="whitespace-nowrap px-4 py-3">{report.student_name}</td>
+                                                    <td className="max-w-[240px] truncate px-4 py-3" title={report.manuscript_title}>{report.manuscript_title}</td>
+                                                    <td className="whitespace-nowrap px-4 py-3">{formatDate(report.created_at)}</td>
+                                                    <td className="whitespace-nowrap px-4 py-3 text-right font-semibold">{formatCurrency(report.total_amount)}</td>
+                                                    <td className="px-4 py-3">
+                                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                            isPaid ? 'bg-emerald-50 text-emerald-700' : isPending ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'
+                                                        }`}>
+                                                            {isPaid ? 'Paid' : isPending ? 'Pending' : 'Untracked'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <button
+                                                            type="button"
+                                                            disabled={Boolean(updatingPaymentId)}
+                                                            onClick={() => {
+                                                                setUpdatingPaymentId(report.id);
+                                                                router.patch(route('critic.reports.payment-status', report.id), {
+                                                                    payment_status: isPaid ? 'pending' : 'paid',
+                                                                }, {
+                                                                    preserveScroll: true,
+                                                                    onFinish: () => setUpdatingPaymentId(null),
+                                                                });
+                                                            }}
+                                                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                                isPaid
+                                                                    ? 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                                                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                            }`}
+                                                        >
+                                                            {isUpdating ? 'Saving…' : isPaid ? 'Mark Pending' : 'Mark Paid'}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="px-5 py-10 text-center text-sm text-gray-500">No certification records are available for payment tracking.</p>
+                        )}
+                    </section>
+                )}
 
                 {/* ── TAB 1: Spreadsheet Sheet View ── */}
                 {activeTab === 'table' && (
@@ -1042,7 +812,7 @@ export default function CriticSummaryReports({ reports = [] }) {
                                                 </div>
                                                 <div>
                                                     <p className="text-xs font-bold text-gray-800">{t.label}</p>
-                                                    <p className="text-[10px] text-gray-400 font-semibold">{((t.count / combinedReports.length) * 100).toFixed(0)}% of total</p>
+                                                    <p className="text-[10px] text-gray-400 font-semibold">{(combinedReports.length ? (t.count / combinedReports.length) * 100 : 0).toFixed(0)}% of total</p>
                                                 </div>
                                             </div>
                                         );
@@ -1063,7 +833,7 @@ export default function CriticSummaryReports({ reports = [] }) {
                                 <div className="space-y-3 mt-8 z-10">
                                     <div className="flex justify-between border-b border-white/10 pb-2">
                                         <span className="text-xs font-medium text-blue-200">Accredited Critics Pool</span>
-                                        <span className="text-xs font-black">{ALL_OFFICIAL_CRITICS.length} Active</span>
+                                        <span className="text-xs font-black">{allOfficialCritics.filter(c => c.status === 'active').length} Active</span>
                                     </div>
                                     <div className="flex justify-between border-b border-white/10 pb-2">
                                         <span className="text-xs font-medium text-blue-200">Total Submissions</span>

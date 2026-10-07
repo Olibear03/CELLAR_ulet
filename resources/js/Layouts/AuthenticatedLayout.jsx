@@ -97,14 +97,14 @@ export default function AuthenticatedLayout({ children }) {
                                     </svg>
                                     {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Dashboard</span>}
                                 </Link>
-                                <Link href={`${route('critic.dashboard')}#request-queue`} className={navItemClass(route().current('critic.dashboard') && window.location.hash === '#request-queue')}>
+                                <Link href={route('critic.requests')} className={navItemClass(route().current('critic.requests'))}>
                                     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                             d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
                                     </svg>
                                     {isSidebarOpen && <span className="ml-3.5 text-[14.5px] font-medium tracking-wide">Requests &amp; Queue</span>}
                                 </Link>
-                                <Link href={`${route('critic.dashboard')}#earnings`} className={navItemClass(route().current('critic.dashboard') && window.location.hash === '#earnings')}>
+                                <Link href={route('critic.earnings')} className={navItemClass(route().current('critic.earnings'))}>
                                     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -141,7 +141,7 @@ export default function AuthenticatedLayout({ children }) {
                             </nav>
                             <SectionLabel label="Account" />
                             <nav className="space-y-1 flex flex-col items-center px-3">
-                                <Link href={route('profile.edit')} className={navItemClass(route().current('profile.edit'))}>
+                                <Link href={route('critic.profile-schedule.edit')} className={navItemClass(route().current('critic.profile-schedule.edit'))}>
                                     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                             d="M5.121 17.804A9 9 0 1118.88 17.8M15 10a3 3 0 11-6 0 3 3 0 016 0zm-3 11a8.96 8.96 0 005.657-2" />
@@ -263,7 +263,7 @@ export default function AuthenticatedLayout({ children }) {
                                     <span className="text-xs font-bold text-blue-400">45%</span>
                                 </div>
                                 <div className="w-full bg-blue-900 rounded-full h-2 mb-3 overflow-hidden border border-blue-800">
-                                    <div className="bg-gradient-to-r from-blue-500 to-blue-300 h-full rounded-full" style={{ width: '45%' }} />
+                                    <div className="bg-linear-to-r from-blue-500 to-blue-300 h-full rounded-full" style={{ width: '45%' }} />
                                 </div>
                                 <div className="flex justify-between text-[11px] font-medium">
                                     <span className="text-blue-400">45 GB Used</span>

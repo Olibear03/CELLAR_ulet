@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
+import CriticRequestModal from '@/Components/CriticRequestModal';
 
 const CRITICS_DATA = [
     {
@@ -464,6 +465,7 @@ export default function AccreditedCritics() {
                 </div>
 
             </div>
+            <CriticRequestModal colleges={CRITICS_DATA} />
         </AuthenticatedLayout>
     );
 }
