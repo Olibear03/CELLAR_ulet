@@ -14,9 +14,10 @@ import FilePreviewModal from '@/Components/FilePreviewModal';
  * ⓘ  → shows a small info popover (owner, date, type)
  * ⋮  → Remove from Favorites / Move to Bin
  */
-export default function Favorites({ documents = [], links = [] }) {
+export default function Favorites({ documents = [], folders = [], links = [] }) {
     const [infoFile, setInfoFile]       = useState(null);
     const [previewFile, setPreviewFile] = useState(null);
+    const bookmarkedDocuments = [...folders, ...documents];
 
     const handleUnfavorite = (id) => {
         router.delete(route('favorites.destroy', id));
@@ -43,7 +44,7 @@ export default function Favorites({ documents = [], links = [] }) {
     const formatDate = (d) =>
         new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    const isEmpty = documents.length === 0 && links.length === 0;
+    const isEmpty = bookmarkedDocuments.length === 0 && links.length === 0;
 
     /* ── Reusable row renderer ── */
     const FavRow = ({ file, isLink = false }) => {
@@ -51,7 +52,7 @@ export default function Favorites({ documents = [], links = [] }) {
 
         return (
             <li
-                className="relative flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors group cursor-pointer"
+                className="relative flex items-center gap-3 px-5 py-3.5 hover:z-20 focus-within:z-20 hover:bg-gray-50 transition-colors group cursor-pointer"
                 onDoubleClick={() => handleOpen(file, isLink)}
                 title={isLink ? 'Double-click to open link' : isFolder ? 'Double-click to open folder' : 'Double-click to preview'}
             >
@@ -189,16 +190,16 @@ export default function Favorites({ documents = [], links = [] }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                         {/* Documents panel */}
-                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="relative rounded-2xl border border-gray-200 bg-white shadow-sm">
                             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                                 <span className="text-sm font-semibold text-gray-800">Documents</span>
-                                <span className="text-sm font-semibold text-gray-400">{documents.length}</span>
+                                <span className="text-sm font-semibold text-gray-400">{bookmarkedDocuments.length}</span>
                             </div>
-                            {documents.length === 0 ? (
+                            {bookmarkedDocuments.length === 0 ? (
                                 <div className="px-5 py-10 text-center text-gray-400 text-sm">No documents bookmarked yet.</div>
                             ) : (
                                 <ul className="divide-y divide-gray-100">
-                                    {documents.map((file) => (
+                                    {bookmarkedDocuments.map((file) => (
                                         <FavRow key={file.id} file={file} isLink={false} />
                                     ))}
                                 </ul>
@@ -206,7 +207,7 @@ export default function Favorites({ documents = [], links = [] }) {
                         </div>
 
                         {/* Links panel */}
-                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="relative rounded-2xl border border-gray-200 bg-white shadow-sm">
                             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                                 <span className="text-sm font-semibold text-gray-800">Links</span>
                                 <span className="text-sm font-semibold text-gray-400">{links.length}</span>

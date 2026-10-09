@@ -16,6 +16,7 @@ import Modal from '@/Components/Modal';
  */
 export default function NewFolderModal({ show, onClose, onCreate }) {
     const [name, setName] = useState('');
+    const [tags, setTags] = useState('');
     const [creating, setCreating] = useState(false);
 
     const handleCreate = async (e) => {
@@ -23,8 +24,9 @@ export default function NewFolderModal({ show, onClose, onCreate }) {
         if (!name.trim()) return;
         setCreating(true);
         try {
-            await onCreate?.(name.trim());
+            await onCreate?.({ name: name.trim(), tags: tags.trim() });
             setName('');
+            setTags('');
             onClose();
         } finally {
             setCreating(false);
@@ -33,6 +35,7 @@ export default function NewFolderModal({ show, onClose, onCreate }) {
 
     const handleClose = () => {
         setName('');
+        setTags('');
         onClose();
     };
 
@@ -68,8 +71,20 @@ export default function NewFolderModal({ show, onClose, onCreate }) {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         autoFocus
-                        className="w-full border border-blue-400 bg-white rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors mb-5"
+                        className="w-full border border-blue-400 bg-white rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         placeholder="Untitled folder"
+                    />
+
+                    <label htmlFor="new-folder-tags" className="mt-4 mb-1.5 block text-xs font-semibold text-gray-600">
+                        Tags <span className="font-normal text-gray-400">(optional, comma-separated)</span>
+                    </label>
+                    <input
+                        id="new-folder-tags"
+                        type="text"
+                        value={tags}
+                        onChange={(e) => setTags(e.target.value)}
+                        className="mb-5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g. policies, 2026"
                     />
 
                     {/* Actions */}

@@ -309,6 +309,35 @@ export default function AccountManagement({ users = [], logs = [] }) {
                         </tbody>
                     </table>
                 </div>
+
+                <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    <div className="border-b border-gray-100 px-6 py-4">
+                        <h2 className="text-base font-bold text-gray-900">Recent Activity</h2>
+                        <p className="mt-1 text-xs text-gray-500">The five most recent account activities.</p>
+                    </div>
+                    {logs.length === 0 ? (
+                        <p className="px-6 py-8 text-sm text-gray-500">No account activity yet.</p>
+                    ) : (
+                        <div className="divide-y divide-gray-100">
+                            {logs.slice(0, 5).map((log) => (
+                                <div key={log.id} className="flex flex-wrap items-center justify-between gap-2 px-6 py-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-medium text-gray-900">
+                                            {log.user?.name ?? 'System'}
+                                            <span className="font-normal text-gray-600"> · {log.action.replaceAll('_', ' ')}</span>
+                                        </p>
+                                        <p className="mt-0.5 text-xs capitalize text-gray-400">
+                                            {log.type?.replaceAll('_', ' ')}{log.location ? ` · ${log.location}` : ''}
+                                        </p>
+                                    </div>
+                                    <time dateTime={log.created_at} className="shrink-0 text-xs text-gray-400">
+                                        {new Date(log.created_at).toLocaleString()}
+                                    </time>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
             </div>
 
             {/* ── Create Account Modal ── */}

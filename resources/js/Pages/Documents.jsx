@@ -140,9 +140,10 @@ export default function Documents({ files = [], categories = [], currentFolder =
     const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
 
     /* -- Create folder handler -- */
-    const handleCreateFolder = (name) => {
+    const handleCreateFolder = ({ name, tags }) => {
         router.post(route('folders.store'), {
             name,
+            tags,
             category_id: defaultCategory,
             folder_id:    currentFolder?.id || null,
             current_path: currentPath,
@@ -360,7 +361,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
                 </div>
 
                 {/* 4. Search bar + Advanced */}
-                <div className="space-y-2">
+                <div className={`relative ${showAdvanced ? 'z-30' : 'z-0'}`}>
                     <div className="flex items-center gap-3">
                         {/* Search input */}
                         <div className="flex-1 relative">
@@ -408,7 +409,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
 
                     {/* Advanced filter panel */}
                     {showAdvanced && (
-                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="absolute left-0 right-0 top-full z-40 mt-2 grid grid-cols-1 gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-xl sm:grid-cols-2 lg:grid-cols-3">
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Sort by</label>
                                 <select

@@ -451,6 +451,7 @@ Route::post('/upload', [ArchiveFileController::class, 'store'])->middleware(['au
 Route::post('/folders', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'name'        => 'required|string|max:255',
+        'tags'        => 'nullable|string|max:500',
         'category_id' => 'required|exists:categories,id',
         'folder_id'   => 'nullable|exists:archive_files,id',
         'current_path'=> 'nullable|string',
@@ -463,7 +464,10 @@ Route::post('/folders', function (\Illuminate\Http\Request $request) {
         'folder_id'         => $request->folder_id,
         'file_path'         => 'folder',
         'original_filename' => 'folder',
-        'metadata'          => ['type' => 'folder'],
+        'metadata'          => [
+            'type' => 'folder',
+            'keywords' => $request->input('tags'),
+        ],
     ]);
 
     // Redirect back to the exact path the user was in
@@ -530,7 +534,7 @@ Route::get('/favorites', function (\Illuminate\Http\Request $request) {
         ->with(['category', 'user'])
         ->get();
 
-    // Split into three groups for the UI
+    // Keep folders separate for the Bookmarks page to combine in its Documents panel.
     $documents = $all->filter(fn($f) => !in_array($f->metadata['type'] ?? '', ['link', 'folder']))->values();
     $folders   = $all->filter(fn($f) => ($f->metadata['type'] ?? '') === 'folder')->values();
     $links     = $all->filter(fn($f) => ($f->metadata['type'] ?? '') === 'link')->values();
@@ -562,7 +566,7 @@ Route::get('/security', function () {
 
     return Inertia::render('AccountManagement', [
         'users' => \App\Models\User::all(),
-        'logs' => \App\Models\ActivityLog::with('user')->latest()->take(20)->get(),
+        'logs' => \App\Models\ActivityLog::with('user')->latest()->take(5)->get(),
     ]);
 })->middleware(['auth', 'verified'])->name('security');
 

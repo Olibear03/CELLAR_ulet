@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\ActivityLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -66,5 +67,31 @@ class AccountManagementUserCreationTest extends TestCase
             'password' => 'temporary-password',
             'role' => 'assistant',
         ])->assertForbidden();
+    }
+
+    public function test_account_management_shows_only_the_five_most_recent_activity_entries(): void
+    {
+        $director = User::factory()->director()->create();
+
+        foreach (range(1, 7) as $number) {
+            $log = ActivityLog::create([
+                'user_id' => $director->id,
+                'action' => "activity_{$number}",
+                'type' => 'auth',
+                'location' => 'System',
+            ]);
+            ActivityLog::whereKey($log->id)->update([
+                'created_at' => now()->subMinutes(8 - $number),
+            ]);
+        }
+
+        $this->actingAs($director)
+            ->get(route('security'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('AccountManagement')
+                ->has('logs', 5)
+                ->where('logs.0.action', 'activity_7')
+                ->where('logs.4.action', 'activity_3'));
     }
 }
