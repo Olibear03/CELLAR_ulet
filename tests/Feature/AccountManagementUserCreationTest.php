@@ -73,7 +73,7 @@ class AccountManagementUserCreationTest extends TestCase
     {
         $director = User::factory()->director()->create();
 
-        foreach (range(1, 7) as $number) {
+        foreach (range(1, 8) as $number) {
             $log = ActivityLog::create([
                 'user_id' => $director->id,
                 'action' => "activity_{$number}",
@@ -81,7 +81,9 @@ class AccountManagementUserCreationTest extends TestCase
                 'location' => 'System',
             ]);
             ActivityLog::whereKey($log->id)->update([
-                'created_at' => now()->subMinutes(8 - $number),
+                'created_at' => $number === 8
+                    ? now()->subDays(31)
+                    : now()->subMinutes(8 - $number),
             ]);
         }
 
@@ -92,6 +94,7 @@ class AccountManagementUserCreationTest extends TestCase
                 ->component('AccountManagement')
                 ->has('logs', 5)
                 ->where('logs.0.action', 'activity_7')
-                ->where('logs.4.action', 'activity_3'));
+                ->where('logs.4.action', 'activity_3')
+                ->missing('logs.5'));
     }
 }

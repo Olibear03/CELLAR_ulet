@@ -25,6 +25,7 @@ export default function UploadModal({ show, onClose, categories = [], defaultCat
 
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef(null);
+    const submissionStarted = useRef(false);
 
     // Reset form fields when the modal opens fresh
     useEffect(() => {
@@ -77,6 +78,8 @@ export default function UploadModal({ show, onClose, categories = [], defaultCat
        so it always reflects the folder the user is currently viewing ── */
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (submissionStarted.current || processing) return;
+        submissionStarted.current = true;
 
         // Build relative paths for folder uploads
         const relativePaths = [];
@@ -138,6 +141,12 @@ export default function UploadModal({ show, onClose, categories = [], defaultCat
                 // Explicitly reload the current folder so the new file appears
                 // router.post's back() can lose the ?folder_id query param
                 router.reload();
+            },
+            onError: () => {
+                submissionStarted.current = false;
+            },
+            onFinish: () => {
+                submissionStarted.current = false;
             },
         });
     };

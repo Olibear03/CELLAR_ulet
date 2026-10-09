@@ -282,9 +282,9 @@ Route::get('/dashboard', function () {
         ->pluck('total', 'month')
         ->toArray();
 
-    // Recent uploads (last 5, any type)
+    // Recent repository items, including files and folders, from the last 30 days.
     $recentUploads = \App\Models\ArchiveFile::with(['category', 'user'])
-        ->whereNotJsonContains('metadata->type', 'folder')
+        ->where('created_at', '>=', now()->subDays(30))
         ->orderBy('created_at', 'desc')
         ->take(5)
         ->get();
@@ -566,7 +566,11 @@ Route::get('/security', function () {
 
     return Inertia::render('AccountManagement', [
         'users' => \App\Models\User::all(),
-        'logs' => \App\Models\ActivityLog::with('user')->latest()->take(5)->get(),
+        'logs' => \App\Models\ActivityLog::with('user')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->latest()
+            ->take(5)
+            ->get(),
     ]);
 })->middleware(['auth', 'verified'])->name('security');
 

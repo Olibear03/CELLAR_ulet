@@ -61,6 +61,13 @@ class ArchiveFileController extends Controller
             ]);
         }
 
+        \App\Models\ActivityLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'uploaded_documents',
+            'type' => 'file_management',
+            'location' => $request->input('current_path') ?: 'Documents',
+        ]);
+
         return redirect('/documents' . ($request->input('current_path') ? '/' . $request->input('current_path') : ''))->with('success', 'File uploaded successfully.');
     }
 }

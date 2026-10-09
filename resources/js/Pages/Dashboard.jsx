@@ -206,7 +206,7 @@ export default function Dashboard({
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="px-6 py-5 border-b border-gray-100">
                         <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
-                        <p className="text-gray-400 text-xs mt-0.5">Latest uploads across the repository</p>
+                        <p className="text-gray-400 text-xs mt-0.5">Latest files and folders from the past 30 days</p>
                     </div>
                     {recentUploads.length === 0 ? (
                         <div className="px-6 py-12 flex flex-col items-center justify-center text-center">
@@ -215,27 +215,34 @@ export default function Dashboard({
                                     d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                             </svg>
                             <p className="text-gray-500 font-medium text-sm">No activity yet</p>
-                            <p className="text-gray-400 text-xs mt-1">Uploaded files will appear here.</p>
+                            <p className="text-gray-400 text-xs mt-1">Newly added files and folders will appear here.</p>
                         </div>
                     ) : (
                         <ul className="divide-y divide-gray-100">
-                            {recentUploads.map((file) => (
+                            {recentUploads.map((file) => {
+                                const isFolder = file.metadata?.type === 'folder';
+
+                                return (
                                 <li key={file.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/60 transition-colors">
                                     <div className="bg-blue-800 p-2.5 rounded-xl shrink-0">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                d={isFolder
+                                                    ? "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                    : "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"} />
                                         </svg>
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-gray-900 truncate">{file.title}</p>
-                                        {file.original_filename && file.original_filename !== 'folder' && (
-                                            <p className="text-xs text-gray-400 truncate mt-0.5">{file.original_filename}</p>
-                                        )}
+                                        <p className="mt-0.5 truncate text-xs text-gray-400">
+                                            {isFolder ? 'Folder' : (file.original_filename || 'File')}
+                                            {file.user?.name && ` · ${file.user.name}`}
+                                        </p>
                                     </div>
                                     <span className="text-sm text-gray-400 shrink-0">{formatDate(file.created_at)}</span>
                                 </li>
-                            ))}
+                                );
+                            })}
                         </ul>
                     )}
                 </div>

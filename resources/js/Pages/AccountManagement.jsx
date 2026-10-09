@@ -313,7 +313,7 @@ export default function AccountManagement({ users = [], logs = [] }) {
                 <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                     <div className="border-b border-gray-100 px-6 py-4">
                         <h2 className="text-base font-bold text-gray-900">Recent Activity</h2>
-                        <p className="mt-1 text-xs text-gray-500">The five most recent account activities.</p>
+                        <p className="mt-1 text-xs text-gray-500">The five most recent activities from the past 30 days.</p>
                     </div>
                     {logs.length === 0 ? (
                         <p className="px-6 py-8 text-sm text-gray-500">No account activity yet.</p>
