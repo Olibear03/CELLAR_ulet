@@ -1,4 +1,5 @@
 import { Head, useForm, Link } from '@inertiajs/react';
+import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import GuestLayout from '@/Layouts/GuestLayout';
 
@@ -76,7 +77,7 @@ export default function CriticRegister() {
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
-                        <input
+                        <TextInput
                             type="password"
                             value={data.password}
                             onChange={e => setData('password', e.target.value)}
@@ -89,7 +90,7 @@ export default function CriticRegister() {
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Confirm Password</label>
-                        <input
+                        <TextInput
                             type="password"
                             value={data.password_confirmation}
                             onChange={e => setData('password_confirmation', e.target.value)}

@@ -1,10 +1,10 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import { Link, usePage, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function AuthenticatedLayout({ children }) {
-    const { auth } = usePage().props;
+    const { auth, notifications = { unread_count: 0, items: [] } } = usePage().props;
     const user = auth.user;
     const isDirector = auth.is_director;
     const isAssistant = auth.is_assistant;
@@ -50,6 +50,23 @@ export default function AuthenticatedLayout({ children }) {
     const showDmsNav = isDirector ? (activeRole === 'Director') : (isDirector || isAssistant || isStaff || (!isCritic));
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+    useEffect(() => {
+        if (!isDirector && !canManageCritics) {
+            return;
+        }
+
+        const interval = window.setInterval(() => {
+            router.reload({
+                only: ['notifications'],
+                preserveState: true,
+                preserveScroll: true,
+            });
+        }, 30000);
+
+        return () => window.clearInterval(interval);
+    }, [isDirector, canManageCritics]);
 
     const navItemClass = (isActive) => {
         const base = 'flex items-center py-2 w-full rounded-xl transition-all';
@@ -329,12 +346,64 @@ export default function AuthenticatedLayout({ children }) {
                             </div>
                         )}
 
-                        <button className="text-gray-400 hover:text-gray-600 relative transition-colors" aria-label="Notifications">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </button>
+                        {(isDirector || canManageCritics) && (
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setNotificationsOpen((open) => !open)}
+                                    className="relative rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+                                    aria-label={`Notifications${notifications.unread_count ? `, ${notifications.unread_count} unread` : ''}`}
+                                    aria-expanded={notificationsOpen}
+                                    aria-haspopup="true"
+                                >
+                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                    {notifications.unread_count > 0 && (
+                                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                                            {notifications.unread_count > 9 ? '9+' : notifications.unread_count}
+                                        </span>
+                                    )}
+                                </button>
+                                {notificationsOpen && (
+                                    <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
+                                        <div className="border-b border-gray-100 px-4 py-3">
+                                            <h2 className="text-sm font-bold text-gray-900">Notifications</h2>
+                                            <p className="mt-0.5 text-xs text-gray-500">
+                                                {notifications.unread_count} unread
+                                            </p>
+                                        </div>
+                                        {notifications.items.length === 0 ? (
+                                            <p className="px-4 py-6 text-center text-sm text-gray-500">
+                                                You’re all caught up.
+                                            </p>
+                                        ) : (
+                                            <div className="max-h-96 overflow-y-auto">
+                                                {notifications.items.map((notification) => (
+                                                    <Link
+                                                        key={notification.id}
+                                                        href={route('notifications.critic-management', notification.id)}
+                                                        onClick={() => setNotificationsOpen(false)}
+                                                        className="block border-b border-gray-100 px-4 py-3 transition-colors last:border-b-0 hover:bg-blue-50"
+                                                    >
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {notification.data.message}
+                                                        </p>
+                                                        <p className="mt-1 text-xs text-blue-700">
+                                                            Review in Critic Management
+                                                        </p>
+                                                        <p className="mt-1 text-[11px] text-gray-400">
+                                                            {new Date(notification.created_at).toLocaleString()}
+                                                        </p>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <Dropdown>
                             <Dropdown.Trigger>

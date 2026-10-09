@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Dropdown from '@/Components/Dropdown';
+import TextInput from '@/Components/TextInput';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -77,7 +78,7 @@ export default function CriticManagement({ critics = [] }) {
     return (
         <AuthenticatedLayout>
             <Head title="Critic Management" />
-            <div className="max-w-[1100px] mx-auto space-y-6">
+            <div className="max-w-275 mx-auto space-y-6">
 
                 {/* ── Header ── */}
                 <div className="flex justify-between items-start flex-wrap gap-3">
@@ -331,7 +332,7 @@ export default function CriticManagement({ critics = [] }) {
                             </div>
                             <div>
                                 <label htmlFor="critic-password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Temporary Password</label>
-                                <input id="critic-password" type="password" value={createData.password}
+                                <TextInput id="critic-password" type="password" value={createData.password}
                                     onChange={e => setCreateData('password', e.target.value)}
                                     className={inputCls} minLength={8} autoComplete="new-password" required />
                                 {createErrors.password && <p className="mt-1 text-sm text-red-600">{createErrors.password}</p>}
@@ -365,7 +366,7 @@ export default function CriticManagement({ critics = [] }) {
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                                     New Password
                                 </label>
-                                <input type="password" value={resetData.password} onChange={e => setResetData('password', e.target.value)}
+                                <TextInput type="password" value={resetData.password} onChange={e => setResetData('password', e.target.value)}
                                     className={inputCls} autoFocus required minLength={8}
                                     placeholder="Minimum 8 characters" />
                                 {resetErrors.password && (

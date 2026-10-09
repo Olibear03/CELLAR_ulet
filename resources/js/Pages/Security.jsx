@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
+import TextInput from '@/Components/TextInput';
 
 export default function Security({ users = [], logs = [] }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -37,7 +38,7 @@ export default function Security({ users = [], logs = [] }) {
                         {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
                         <input type="email" value={data.email} onChange={e => setData('email', e.target.value)} placeholder="Email address" required className="w-full rounded-xl border border-gray-200 px-4 py-2.5" />
                         {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
-                        <input type="password" value={data.password} onChange={e => setData('password', e.target.value)} placeholder="Temporary password" required minLength={8} className="w-full rounded-xl border border-gray-200 px-4 py-2.5" />
+                        <TextInput type="password" value={data.password} onChange={e => setData('password', e.target.value)} placeholder="Temporary password" required minLength={8} className="w-full rounded-xl border border-gray-200 px-4 py-2.5" />
                         {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
                         <button disabled={processing} className="w-full rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Create account</button>
                     </form>

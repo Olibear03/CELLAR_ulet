@@ -3,6 +3,7 @@ import { Head, usePage, useForm, router } from '@inertiajs/react';
 import Dropdown from '@/Components/Dropdown';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
+import TextInput from '@/Components/TextInput';
 
 /**
  * AccountManagement — internal staff/assistant management.
@@ -336,7 +337,7 @@ export default function AccountManagement({ users = [], logs = [] }) {
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Temporary Password</label>
-                                <input type="password" value={data.password} onChange={e => setData('password', e.target.value)} className={inputCls} required minLength={8} />
+                                <TextInput type="password" value={data.password} onChange={e => setData('password', e.target.value)} className={inputCls} required minLength={8} />
                                 <InputError message={errors.password} className="mt-1" />
                             </div>
                             <input type="hidden" name="role" value={data.role} />
@@ -367,7 +368,7 @@ export default function AccountManagement({ users = [], logs = [] }) {
                         <form onSubmit={submitResetPassword} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">New Password</label>
-                                <input type="password" value={tempPassword} onChange={e => setTempPassword(e.target.value)}
+                                <TextInput type="password" value={tempPassword} onChange={e => setTempPassword(e.target.value)}
                                     className={inputCls} autoFocus required minLength={8} />
                             </div>
                             <div className="flex justify-end gap-3 pt-2">
@@ -459,7 +460,7 @@ export default function AccountManagement({ users = [], logs = [] }) {
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                                     Confirm your password
                                 </label>
-                                <input type="password" value={transferPassword}
+                                <TextInput type="password" value={transferPassword}
                                     onChange={e => setTransferPassword(e.target.value)}
                                     className={inputCls} autoFocus required placeholder="Enter your current password" />
                             </div>

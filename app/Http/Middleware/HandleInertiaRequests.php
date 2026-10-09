@@ -30,6 +30,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $canManageCritics = (bool) ($user?->canManageCritics());
 
         return [
             ...parent::share($request),
@@ -40,9 +41,22 @@ class HandleInertiaRequests extends Middleware
                 'is_staff'     => (bool) ($user?->is_staff),
                 'is_critic'    => (bool) ($user?->is_critic),
                 'can_access_critic_reports' => (bool) ($user?->canAccessCriticReports()),
-                'can_manage_critics' => (bool) ($user?->canManageCritics()),
+                'can_manage_critics' => $canManageCritics,
                 'status'       => $user?->status,
             ],
+            'notifications' => $canManageCritics ? [
+                'unread_count' => $user->unreadNotifications()->count(),
+                'items' => $user->unreadNotifications()
+                    ->latest()
+                    ->limit(10)
+                    ->get()
+                    ->map(fn ($notification) => [
+                        'id' => $notification->id,
+                        'data' => $notification->data,
+                        'created_at' => $notification->created_at,
+                    ])
+                    ->values(),
+            ] : ['unread_count' => 0, 'items' => []],
         ];
     }
 }

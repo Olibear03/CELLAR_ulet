@@ -1,6 +1,7 @@
 
 import { Head, Link } from '@inertiajs/react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import TextInput from '@/Components/TextInput';
 
 /**
  * Welcome / Landing page — Clean, minimal plain style.
@@ -194,7 +195,7 @@ function RegistrationCard() {
 
             <div>
                 <label className="text-xs text-slate-500 font-bold uppercase">Password</label>
-                <input
+                <TextInput
                     type="password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -205,7 +206,7 @@ function RegistrationCard() {
 
             <div>
                 <label className="text-xs text-slate-500 font-bold uppercase">Confirm Password</label>
-                <input
+                <TextInput
                     type="password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}

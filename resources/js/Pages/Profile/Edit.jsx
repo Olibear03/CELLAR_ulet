@@ -3,6 +3,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { useRef } from 'react';
 import InputError from '@/Components/InputError';
 import { Transition } from '@headlessui/react';
+import TextInput from '@/Components/TextInput';
 
 /**
  * Profile Edit page — matches the reference design:
@@ -197,7 +198,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     <form onSubmit={submitPassword} className="space-y-5">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
-                            <input
+                            <TextInput
                                 ref={currentPasswordRef}
                                 type="password"
                                 value={pwData.current_password}
@@ -210,7 +211,7 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
-                            <input
+                            <TextInput
                                 ref={passwordRef}
                                 type="password"
                                 value={pwData.password}
@@ -223,7 +224,7 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
-                            <input
+                            <TextInput
                                 type="password"
                                 value={pwData.password_confirmation}
                                 onChange={(e) => setPwData('password_confirmation', e.target.value)}

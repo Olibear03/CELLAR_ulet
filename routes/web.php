@@ -87,6 +87,17 @@ Route::get('/critic-management', function () {
     return Inertia::render('CriticManagement', ['critics' => $critics]);
 })->middleware(['auth', 'verified'])->name('critic.management');
 
+Route::get('/notifications/{notification}/critic-management', function (string $notification) {
+    abort_unless(request()->user()->canManageCritics(), 403);
+
+    $userNotification = request()->user()->notifications()
+        ->whereKey($notification)
+        ->firstOrFail();
+    $userNotification->markAsRead();
+
+    return redirect()->route('critic.management');
+})->middleware(['auth', 'verified'])->name('notifications.critic-management');
+
 Route::post('/critic-management', function (\Illuminate\Http\Request $request) {
     abort_unless($request->user()->is_director, 403);
 

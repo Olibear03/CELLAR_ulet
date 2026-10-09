@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\CriticRegisteredNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -46,14 +49,26 @@ class CriticRegisterController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        User::create([
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'password'   => Hash::make($request->password),
-            'is_critic'  => true,
-            'college'    => $request->college,
-            'status'     => 'pending',
-        ]);
+        DB::transaction(function () use ($request) {
+            $critic = User::create([
+                'name'       => $request->name,
+                'email'      => $request->email,
+                'password'   => Hash::make($request->password),
+                'is_critic'  => true,
+                'college'    => $request->college,
+                'status'     => 'pending',
+            ]);
+
+            $recipients = User::query()
+                ->where('is_director', true)
+                ->orWhere(function ($query) {
+                    $query->where('is_assistant', true)
+                        ->where('can_manage_critics', true);
+                })
+                ->get();
+
+            Notification::send($recipients, new CriticRegisteredNotification($critic));
+        });
 
         // Do NOT log in — account must be approved first
         return Inertia::render('Auth/CriticRegisterSuccess');

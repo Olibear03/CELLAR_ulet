@@ -262,7 +262,7 @@ export default function Documents({ files = [], categories = [], currentFolder =
     return (
         <AuthenticatedLayout>
             <Head title="Documents" />
-            <div className="max-w-[1100px] mx-auto space-y-4">
+            <div className="max-w-275 mx-auto space-y-4">
 
                 {/* 1. Breadcrumbs removed from top */}
 
