@@ -10,8 +10,8 @@ import TextInput from '@/Components/TextInput';
  * Visible to: Director + Admin Assistant.
  * English Critics are managed separately on /critic-management.
  *
- * Director can:  create, approve, deactivate, reset password, hard-delete, transfer ownership
- * Assistant can: create, approve, deactivate, reset password (no delete, no transfer)
+ * Director can:  create, approve, deactivate, reset password, hard-delete
+ * Assistant can: create, approve, deactivate, reset password (no delete)
  */
 export default function AccountManagement({ users = [], logs = [] }) {
     const { auth }    = usePage().props;
@@ -22,9 +22,6 @@ export default function AccountManagement({ users = [], logs = [] }) {
     const [resetTarget,      setResetTarget]       = useState(null);
     const [tempPassword,     setTempPassword]      = useState('');
     const [permissionsTarget, setPermissionsTarget] = useState(null);
-    const [transferTarget,   setTransferTarget]    = useState(null);
-    const [transferPassword, setTransferPassword]  = useState('');
-    const [transferError,    setTransferError]     = useState('');
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '', email: '', password: '', role: 'staff',
@@ -81,18 +78,6 @@ export default function AccountManagement({ users = [], logs = [] }) {
                 setPermissionsTarget(null);
                 resetPermissions();
             },
-        });
-    };
-
-    const submitTransfer = (e) => {
-        e.preventDefault();
-        setTransferError('');
-        router.post(route('account-management.transfer-ownership'), {
-            target_user_id: transferTarget.id,
-            password:        transferPassword,
-        }, {
-            onError:   (errs) => setTransferError(errs.transfer || 'Transfer failed.'),
-            onSuccess: ()     => { setTransferTarget(null); setTransferPassword(''); },
         });
     };
 
@@ -277,14 +262,6 @@ export default function AccountManagement({ users = [], logs = [] }) {
                                                                 Deactivate
                                                             </button>
                                                         )}
-                                                        {/* Transfer ownership — Director → Staff, Assistant → Staff (target must be is_staff) */}
-                                                        {(isDirector || isAssistant) && u.is_staff && (
-                                                            <button onClick={() => { setTransferTarget(u); setTransferPassword(''); setTransferError(''); }}
-                                                                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-blue-700 hover:bg-blue-50">
-                                                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                                                                Transfer Role to {u.name.split(' ')[0]}
-                                                            </button>
-                                                        )}
                                                         {/* Hard delete — Director only */}
                                                         {isDirector && (
                                                             <>
@@ -459,52 +436,6 @@ export default function AccountManagement({ users = [], logs = [] }) {
                 </div>
             )}
 
-            {/* ── Transfer Role Modal ── */}
-            {transferTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-7">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-amber-100 p-2 rounded-xl">
-                                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900">Transfer Role</h3>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-1">
-                            Transfer your <strong>{isDirector ? 'Director' : 'Admin Assistant'}</strong> role to{' '}
-                            <strong>{transferTarget.name}</strong>.
-                        </p>
-                        <p className="text-xs text-gray-400 mb-4">
-                            You will become a Staff member after this action.
-                        </p>
-                        {transferError && (
-                            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
-                                {transferError}
-                            </p>
-                        )}
-                        <form onSubmit={submitTransfer} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                                    Confirm your password
-                                </label>
-                                <TextInput type="password" value={transferPassword}
-                                    onChange={e => setTransferPassword(e.target.value)}
-                                    className={inputCls} autoFocus required placeholder="Enter your current password" />
-                            </div>
-                            <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setTransferTarget(null)}
-                                    className="px-5 py-2 text-sm font-semibold text-gray-700">Cancel</button>
-                                <button type="submit"
-                                    className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg">
-                                    Confirm Transfer
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </AuthenticatedLayout>
     );
 }

@@ -13,7 +13,9 @@ import { useEffect, useState } from 'react';
 export default function CriticManagement({ critics = [] }) {
     const [createOpen, setCreateOpen] = useState(false);
     const [resetTarget,  setResetTarget]  = useState(null);
+    const [transferTarget, setTransferTarget] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [collegeFilter, setCollegeFilter] = useState('');
     const { auth, flash } = usePage().props;
     const {
         data: createData,
@@ -31,6 +33,14 @@ export default function CriticManagement({ critics = [] }) {
         errors: resetErrors,
         reset: clearPassword,
     } = useForm({ password: '' });
+    const {
+        data: transferData,
+        setData: setTransferData,
+        post: postTransfer,
+        processing: transferring,
+        errors: transferErrors,
+        reset: resetTransfer,
+    } = useForm({ target_user_id: '', password: '' });
 
     /* ── Actions ── */
     const submitCreate = (e) => {
@@ -46,6 +56,21 @@ export default function CriticManagement({ critics = [] }) {
 
     const handleApprove    = (id) => router.patch(route('critic.management.approve', id),    {}, { preserveScroll: true });
     const handleDeactivate = (id) => router.patch(route('critic.management.deactivate', id), {}, { preserveScroll: true });
+    const openTransfer = (critic) => {
+        setTransferTarget(critic);
+        setTransferData({ target_user_id: critic.id, password: '' });
+    };
+    const closeTransfer = () => {
+        setTransferTarget(null);
+        resetTransfer();
+    };
+    const submitTransfer = (event) => {
+        event.preventDefault();
+        postTransfer(route('critic.management.transfer-ownership'), {
+            preserveScroll: true,
+            onSuccess: closeTransfer,
+        });
+    };
     const handleDelete     = (id) => {
         if (confirm('Permanently delete this critic account? This cannot be undone.'))
             router.delete(route('critic.management.destroy', id));
@@ -67,8 +92,13 @@ export default function CriticManagement({ critics = [] }) {
 
     const pending     = critics.filter(c => c.status === 'pending');
     const pageSize    = 8;
-    const pageCount   = Math.ceil(critics.length / pageSize);
-    const visibleCritics = critics.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const colleges = [...new Set(critics.map((critic) => critic.college).filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right));
+    const filteredCritics = collegeFilter
+        ? critics.filter((critic) => critic.college === collegeFilter)
+        : critics;
+    const pageCount   = Math.ceil(filteredCritics.length / pageSize);
+    const visibleCritics = filteredCritics.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const inputCls    = 'w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-colors outline-none';
 
     useEffect(() => {
@@ -157,6 +187,22 @@ export default function CriticManagement({ critics = [] }) {
                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <h2 className="text-base font-bold text-gray-900">All English Critics</h2>
+                        <label className="ml-auto flex items-center gap-2 text-xs font-medium text-gray-500">
+                            <span>College</span>
+                            <select
+                                value={collegeFilter}
+                                onChange={(event) => {
+                                    setCollegeFilter(event.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All colleges</option>
+                                {colleges.map((college) => (
+                                    <option key={college} value={college}>{college}</option>
+                                ))}
+                            </select>
+                        </label>
                     </div>
 
                     {critics.length === 0 ? (
@@ -240,6 +286,15 @@ export default function CriticManagement({ critics = [] }) {
                                                     >
                                                         Reset Password
                                                     </button>
+                                                    {auth.is_director && !c.is_director && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openTransfer(c)}
+                                                            className="flex w-full items-center px-4 py-2.5 text-left text-sm text-blue-700 hover:bg-blue-50"
+                                                        >
+                                                            Transfer Ownership
+                                                        </button>
+                                                    )}
                                                     <div className="my-1 border-t border-gray-100" />
                                                     <button
                                                         type="button"
@@ -261,7 +316,7 @@ export default function CriticManagement({ critics = [] }) {
                     {pageCount > 1 && (
                         <div className="flex items-center justify-between border-t border-gray-100 px-6 py-3">
                             <p className="text-xs text-gray-500">
-                                Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, critics.length)} of {critics.length} accounts
+                                Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredCritics.length)} of {filteredCritics.length} accounts
                             </p>
                             <div className="flex items-center gap-2">
                                 <button
@@ -379,6 +434,68 @@ export default function CriticManagement({ critics = [] }) {
                                 <button type="submit" disabled={resettingPassword}
                                     className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg disabled:opacity-60">
                                     {resettingPassword ? 'Resetting…' : 'Reset Password'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {transferTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-xl">
+                        <div className="mb-4 flex items-center gap-3">
+                            <div className="rounded-xl bg-amber-100 p-2">
+                                <svg className="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900">Transfer Ownership</h3>
+                        </div>
+                        <p className="mb-1 text-sm text-gray-600">
+                            Only an <strong>English Critic</strong> can replace you as Director. Transfer the role to{' '}
+                            <strong>{transferTarget.name}</strong>?
+                        </p>
+                        <p className="mb-4 text-xs text-gray-400">
+                            They will keep their English Critic access, and you will become a Staff member.
+                        </p>
+                        {transferErrors.transfer && (
+                            <p role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                                {transferErrors.transfer}
+                            </p>
+                        )}
+                        <form onSubmit={submitTransfer} className="space-y-4">
+                            <div>
+                                <label htmlFor="critic-transfer-password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Confirm your password
+                                </label>
+                                <TextInput
+                                    id="critic-transfer-password"
+                                    type="password"
+                                    value={transferData.password}
+                                    onChange={(event) => setTransferData('password', event.target.value)}
+                                    className={inputCls}
+                                    autoFocus
+                                    required
+                                    autoComplete="current-password"
+                                    placeholder="Enter your current password"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={closeTransfer}
+                                    className="px-5 py-2 text-sm font-semibold text-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={transferring}
+                                    className="rounded-lg bg-amber-600 px-6 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                                >
+                                    {transferring ? 'Transferring…' : 'Confirm Transfer'}
                                 </button>
                             </div>
                         </form>

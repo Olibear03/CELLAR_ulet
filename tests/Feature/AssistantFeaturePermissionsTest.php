@@ -137,4 +137,79 @@ class AssistantFeaturePermissionsTest extends TestCase
             ])
             ->assertSessionHasErrors('email');
     }
+
+    public function test_director_can_transfer_ownership_to_a_critic_after_password_confirmation(): void
+    {
+        $director = User::factory()->director()->create();
+        $director->forceFill(['password' => \Illuminate\Support\Facades\Hash::make('director-password')])->save();
+        $critic = User::factory()->critic()->create(['status' => 'pending']);
+
+        $this->actingAs($director)
+            ->post(route('critic.management.transfer-ownership'), [
+                'target_user_id' => $critic->id,
+                'password' => 'director-password',
+            ])
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue($critic->fresh()->is_director);
+        $this->assertTrue($critic->fresh()->is_critic);
+        $this->assertSame('active', $critic->fresh()->status);
+        $this->assertFalse($director->fresh()->is_director);
+        $this->assertTrue($director->fresh()->is_staff);
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id' => $director->id,
+            'action' => 'transferred_director_ownership',
+        ]);
+    }
+
+    public function test_ownership_transfer_requires_the_current_users_password(): void
+    {
+        $director = User::factory()->director()->create();
+        $director->forceFill(['password' => \Illuminate\Support\Facades\Hash::make('director-password')])->save();
+        $critic = User::factory()->critic()->create();
+
+        $this->actingAs($director)
+            ->post(route('critic.management.transfer-ownership'), [
+                'target_user_id' => $critic->id,
+                'password' => 'wrong-password',
+            ])
+            ->assertSessionHasErrors('transfer');
+
+        $this->assertFalse($critic->fresh()->is_director);
+        $this->assertTrue($director->fresh()->is_director);
+    }
+
+    public function test_director_cannot_transfer_ownership_to_a_staff_member(): void
+    {
+        $director = User::factory()->director()->create();
+        $director->forceFill(['password' => Hash::make('director-password')])->save();
+        $staff = User::factory()->staff()->create();
+
+        $this->actingAs($director)
+            ->post(route('critic.management.transfer-ownership'), [
+                'target_user_id' => $staff->id,
+                'password' => 'director-password',
+            ])
+            ->assertUnprocessable();
+
+        $this->assertFalse($staff->fresh()->is_director);
+        $this->assertTrue($director->fresh()->is_director);
+        $this->assertFalse($director->fresh()->is_staff);
+    }
+
+    public function test_assistant_cannot_transfer_ownership_to_an_english_critic(): void
+    {
+        $assistant = User::factory()->assistant()->create();
+        $critic = User::factory()->critic()->create();
+
+        $this->actingAs($assistant)
+            ->post(route('critic.management.transfer-ownership'), [
+                'target_user_id' => $critic->id,
+                'password' => 'password',
+            ])
+            ->assertForbidden();
+
+        $this->assertFalse($critic->fresh()->is_director);
+    }
 }

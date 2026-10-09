@@ -82,7 +82,7 @@ Route::get('/critic-management', function () {
     $critics = \App\Models\User::where('is_critic', true)
         ->withCount('criticSummaryReports')
         ->orderBy('name')
-        ->get(['id', 'name', 'email', 'college', 'status', 'created_at']);
+        ->get(['id', 'name', 'email', 'college', 'status', 'created_at', 'is_director']);
 
     return Inertia::render('CriticManagement', ['critics' => $critics]);
 })->middleware(['auth', 'verified'])->name('critic.management');
@@ -164,6 +164,57 @@ Route::delete('/critic-management/{id}', function ($id) {
     $critic->delete();
     return redirect()->back()->with('success', 'Critic deleted.');
 })->middleware(['auth', 'verified'])->name('critic.management.destroy');
+
+Route::post('/critic-management/transfer-ownership', function (\Illuminate\Http\Request $request) {
+    $actor = $request->user();
+    abort_unless($actor->is_director, 403);
+
+    $validated = $request->validate([
+        'target_user_id' => 'required|integer|exists:users,id',
+        'password' => 'required|string',
+    ]);
+
+    if (! \Illuminate\Support\Facades\Hash::check($validated['password'], $actor->password)) {
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            'transfer' => 'The password you entered is incorrect.',
+        ]);
+    }
+
+    $target = \App\Models\User::findOrFail($validated['target_user_id']);
+    abort_if($target->is($actor), 422, 'You cannot transfer ownership to yourself.');
+    abort_unless(
+        $target->is_critic && ! $target->is_director,
+        422,
+        'The Director role can only be transferred to an English Critic.'
+    );
+
+    \Illuminate\Support\Facades\DB::transaction(function () use ($actor, $target) {
+        $target->update([
+            'is_director' => true,
+            'is_assistant' => false,
+            'is_staff' => false,
+            'status' => 'active',
+        ]);
+
+        $actor->update([
+            'is_director' => false,
+            'is_assistant' => false,
+            'is_staff' => true,
+            'can_access_critic_reports' => false,
+            'can_manage_critics' => false,
+            'status' => 'active',
+        ]);
+
+        \App\Models\ActivityLog::create([
+            'user_id' => $actor->id,
+            'action' => 'transferred_director_ownership',
+            'type' => 'auth',
+            'location' => 'Critic Management',
+        ]);
+    });
+
+    return redirect()->route('dashboard')->with('success', "Director ownership was transferred to English Critic {$target->name}.");
+})->middleware(['auth', 'verified'])->name('critic.management.transfer-ownership');
 
 // ── Public Client Request Form (no login required) ──────────────────────────
 Route::get('/request', function () {
