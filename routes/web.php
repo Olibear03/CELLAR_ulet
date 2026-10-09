@@ -19,7 +19,46 @@ Route::get('/', function () {
 });
 
 Route::get('/public-critics', function () {
-    return Inertia::render('PublicAccreditedCritics');
+    $collegeNames = [
+        'CAFENR' => 'College of Agriculture, Food, Environment, and Natural Resources',
+        'CAS' => 'College of Arts and Sciences',
+        'CED' => 'College of Education',
+        'CEIT' => 'College of Engineering and Information Technology',
+        'CEMDS' => 'College of Economics, Management, and Development Studies',
+        'CON' => 'College of Nursing',
+        'CVMBS' => 'College of Veterinary Medicine and Biomedical Sciences',
+    ];
+
+    $activeCritics = \App\Models\User::query()
+        ->where('is_critic', true)
+        ->where('status', 'active')
+        ->whereNotNull('college')
+        ->where('college', '!=', '')
+        ->orderBy('name')
+        ->get(['name', 'college', 'availability_status']);
+
+    $accreditedCritics = $activeCritics
+        ->groupBy('college')
+        ->map(fn ($critics, $code) => [
+            'code' => $code,
+            'college' => $collegeNames[$code] ?? $code,
+            'list' => $critics->pluck('name')->values(),
+        ])
+        ->values();
+
+    $requestColleges = $activeCritics
+        ->groupBy('college')
+        ->map(fn ($critics, $code) => [
+            'code' => $code,
+            'college' => $collegeNames[$code] ?? $code,
+            'list' => $critics->pluck('name')->values(),
+        ])
+        ->values();
+
+    return Inertia::render('PublicAccreditedCritics', [
+        'accreditedCritics' => $accreditedCritics,
+        'requestColleges' => $requestColleges,
+    ]);
 })->name('public-critics');
 
 Route::get('/critic-reports', [CriticReportController::class, 'index'])
@@ -202,6 +241,9 @@ Route::get('/critic-earnings', [CriticEarningsController::class, 'index'])
 Route::get('/critic-requests', [CriticQueueController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('critic.requests');
+Route::patch('/critic-requests/availability', [CriticQueueController::class, 'updateAvailability'])
+    ->middleware(['auth', 'verified'])
+    ->name('critic.requests.availability');
 
 Route::get('/dashboard', function () {
     $userId = auth()->id();

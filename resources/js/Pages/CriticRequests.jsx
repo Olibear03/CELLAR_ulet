@@ -32,6 +32,7 @@ export default function CriticRequests({ requests = [], availabilityStatus = 'ac
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [processingRequest, setProcessingRequest] = useState(null);
+    const [updatingAvailability, setUpdatingAvailability] = useState(false);
     const pageSize = 8;
     const isAccepting = availabilityStatus === 'accepting';
 
@@ -67,6 +68,15 @@ export default function CriticRequests({ requests = [], availabilityStatus = 'ac
         });
     };
 
+    const toggleAvailability = () => {
+        const nextStatus = isAccepting ? 'unavailable' : 'accepting';
+        router.patch(route('critic.requests.availability'), { availability_status: nextStatus }, {
+            preserveScroll: true,
+            onStart: () => setUpdatingAvailability(true),
+            onFinish: () => setUpdatingAvailability(false),
+        });
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Requests & Queue" />
@@ -95,14 +105,43 @@ export default function CriticRequests({ requests = [], availabilityStatus = 'ac
                                 </span>
                             </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                            <span className="rounded-full bg-blue-50 px-3 py-1.5 font-semibold text-blue-700">
-                                {requests.filter((request) => request.status === 'pending').length} pending
-                            </span>
-                            <span className="text-xs">Queue limit: {queueLimit} active papers</span>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                                <span className="rounded-full bg-blue-50 px-3 py-1.5 font-semibold text-blue-700">
+                                    {requests.filter((request) => request.status === 'pending').length} pending
+                                </span>
+                                <span className="text-xs">Queue limit: {queueLimit} active papers</span>
+                            </div>
+                            <button
+                                type="button"
+                                role="switch"
+                                aria-checked={isAccepting}
+                                aria-label="Accept student requests"
+                                disabled={updatingAvailability}
+                                onClick={toggleAvailability}
+                                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 ${
+                                    isAccepting ? 'bg-emerald-500' : 'bg-gray-300'
+                                }`}
+                            >
+                                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${isAccepting ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
                         </div>
                     </div>
                 </section>
+
+                <div className="flex justify-end">
+                    <button
+                        type="button"
+                        disabled
+                        title="Walk-in request logging is not available yet."
+                        className="inline-flex shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-400"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v14m7-7H5" />
+                        </svg>
+                        Log Walk-In Request
+                    </button>
+                </div>
 
                 <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                     <div className="flex flex-col gap-3 border-b border-gray-100 p-4 lg:flex-row lg:items-center lg:justify-between">
@@ -135,23 +174,12 @@ export default function CriticRequests({ requests = [], availabilityStatus = 'ac
                             </label>
                         </div>
 
-                        <button
-                            type="button"
-                            disabled
-                            title="Walk-in request logging is not available yet."
-                            className="inline-flex shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-400 lg:ml-auto lg:w-auto"
-                        >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v14m7-7H5" />
-                            </svg>
-                            Log Walk-In Request
-                        </button>
                     </div>
 
                     {visibleRequests.length > 0 ? (
-                        <div className="overflow-x-auto">
+                        <div className="max-h-[min(65vh,640px)] overflow-auto">
                             <table className="w-full min-w-[850px] text-left text-sm">
-                                <thead className="bg-gray-50 text-xs font-semibold text-gray-600">
+                                <thead className="sticky top-0 z-10 bg-gray-50 text-xs font-semibold text-gray-600 shadow-sm">
                                     <tr>
                                         <th className="px-4 py-3">Student &amp; Email</th>
                                         <th className="px-4 py-3">Document &amp; Link</th>

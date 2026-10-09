@@ -49,4 +49,92 @@ class CriticRequestsTest extends TestCase
             ->get(route('critic.requests'))
             ->assertForbidden();
     }
+
+    public function test_critic_can_toggle_availability_for_student_requests(): void
+    {
+        $critic = User::factory()->critic()->create([
+            'status' => 'active',
+            'availability_status' => 'accepting',
+        ]);
+
+        $this->actingAs($critic)
+            ->patch(route('critic.requests.availability'), ['availability_status' => 'unavailable'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('unavailable', $critic->fresh()->availability_status);
+
+        $this->get(route('critic.requests'))
+            ->assertInertia(fn ($page) => $page->where('availabilityStatus', 'unavailable'));
+
+        $this->patch(route('critic.requests.availability'), ['availability_status' => 'accepting'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('accepting', $critic->fresh()->availability_status);
+    }
+
+    public function test_only_active_critics_are_listed_for_student_requests(): void
+    {
+        User::factory()->critic()->create([
+            'name' => 'Available Critic',
+            'college' => 'CAS',
+            'status' => 'active',
+            'availability_status' => 'accepting',
+        ]);
+        User::factory()->critic()->create([
+            'name' => 'Unavailable Critic',
+            'college' => 'CAS',
+            'status' => 'active',
+            'availability_status' => 'unavailable',
+        ]);
+        User::factory()->critic()->create([
+            'name' => 'Pending Critic',
+            'college' => 'CAS',
+            'status' => 'pending',
+            'availability_status' => 'accepting',
+        ]);
+        User::factory()->critic()->create([
+            'name' => 'Deactivated Critic',
+            'college' => 'CAS',
+            'status' => 'deactivated',
+            'availability_status' => 'accepting',
+        ]);
+        User::factory()->create([
+            'name' => 'Regular User',
+            'college' => 'CAS',
+            'status' => 'active',
+        ]);
+        $deletedCritic = User::factory()->critic()->create([
+            'name' => 'Deleted Critic',
+            'college' => 'CAS',
+            'status' => 'active',
+        ]);
+        $deletedCritic->delete();
+
+        $this->get(route('public-critics'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('PublicAccreditedCritics')
+                ->has('accreditedCritics', 1)
+                ->where('accreditedCritics.0.code', 'CAS')
+                ->where('accreditedCritics.0.list.0', 'Available Critic')
+                ->where('accreditedCritics.0.list.1', 'Unavailable Critic')
+                ->has('accreditedCritics.0.list', 2)
+                ->has('requestColleges', 1)
+                ->where('requestColleges.0.code', 'CAS')
+                ->where('requestColleges.0.list.0', 'Available Critic')
+                ->where('requestColleges.0.list.1', 'Unavailable Critic')
+                ->has('requestColleges.0.list', 2)
+            );
+    }
+
+    public function test_non_critic_cannot_change_critic_request_availability(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->patch(route('critic.requests.availability'), ['availability_status' => 'unavailable'])
+            ->assertForbidden();
+    }
 }

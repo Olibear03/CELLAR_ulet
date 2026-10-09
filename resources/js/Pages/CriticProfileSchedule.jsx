@@ -219,9 +219,15 @@ export default function CriticProfileSchedule({ profile }) {
                                     <div className="mb-2 flex items-center justify-between gap-3">
                                         <h3 className="text-sm font-semibold text-gray-800">Office Hours for F2F Meetings</h3>
                                         <button
-                                            type={editingSchedule ? 'submit' : 'button'}
+                                            type="button"
                                             disabled={processing}
-                                            onClick={editingSchedule ? undefined : () => setEditingSchedule(true)}
+                                            onClick={(event) => {
+                                                if (editingSchedule) {
+                                                    saveChanges(event);
+                                                } else {
+                                                    setEditingSchedule(true);
+                                                }
+                                            }}
                                             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                             {editingSchedule ? (processing ? 'Saving…' : 'Save Schedule') : 'Edit'}
